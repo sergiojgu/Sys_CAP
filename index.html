@@ -15,6 +15,79 @@
     color:#222;
     -webkit-font-smoothing:antialiased;
   }
+
+  /* PANTALLA DE LOGIN */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #2e7d32, #4CAF50);
+  }
+  
+  .login-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .login-title {
+    color: #2e7d32;
+    margin-bottom: 10px;
+    font-size: 24px;
+  }
+  
+  .login-subtitle {
+    color: #666;
+    margin-bottom: 25px;
+  }
+  
+  .login-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+  }
+  
+  .login-btn:hover {
+    background: #1b5e20;
+  }
+  
+  .user-info {
+    font-size: 14px;
+    color: #666;
+    margin-top: 20px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+  }
+
+  /* CONTENIDO PRINCIPAL (oculto inicialmente) */
+  #main-app {
+    display: none;
+  }
+
   header{
     text-align:center;
     padding:18px 10px 6px;
@@ -205,6 +278,89 @@
     background: #0b7dda;
   }
 
+  /* Botón de cerrar sesión */
+  .logout-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #666;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 1000;
+  }
+
+  /* Elementos deshabilitados para roles específicos */
+  .admin-only {
+    display: none;
+  }
+  
+  .operador-only {
+    display: none;
+  }
+  
+  .visitante-only {
+    display: none;
+  }
+
+  /* Estilos para la bitácora */
+  .bitacora-item {
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    margin-bottom: 10px;
+    border-left: 4px solid #4CAF50;
+  }
+  
+  .bitacora-tipo {
+    font-weight: bold;
+    color: #2e7d32;
+    margin-right: 8px;
+  }
+  
+  .bitacora-fecha {
+    color: #666;
+    font-size: 12px;
+  }
+  
+  .bitacora-detalles {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #333;
+  }
+
+  /* Estilos para usuarios */
+  .badge-admin {
+    background: #d9534f;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  
+  .badge-operador {
+    background: #f0ad4e;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  
+  .badge-visitante {
+    background: #5bc0de;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
   /* responsive tweaks */
   @media (max-width:520px){
     #menu button{ width:92%; font-size:15px; }
@@ -214,138 +370,725 @@
 </head>
 <body>
 
-<header>
-  <h1>Control de asistencias y pagos<br><span class="subtitulo">UE Bolivia Venezuela</span></h1>
-</header>
-
-<!-- MENU -->
-<div id="menu" aria-label="Menú principal">
-  <button onclick="abrirModulo('alumnos')">Alumnos</button>
-  <button onclick="abrirModulo('padres')">Padres</button>
-  <button onclick="abrirModulo('grupos')">Grupos</button>
-  <button onclick="abrirModulo('reuniones')">Reuniones</button>
-  <button onclick="abrirModulo('pagos')">Pagos</button>
-  <button class="btn-exportar" onclick="exportarDatos()">Exportar Datos a Excel</button>
+<!-- PANTALLA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-container">
+    <h2 class="login-title">Control de Asistencias y Pagos</h2>
+    <p class="login-subtitle">UE Bolivia Venezuela</p>
+    
+    <input type="text" id="username" class="login-input" placeholder="Usuario">
+    <input type="password" id="password" class="login-input" placeholder="Contraseña">
+    
+    <button id="login-btn" class="login-btn" onclick="login()">Ingresar</button>
+    
+    <div class="user-info">
+      <p><strong>Usuario inicial:</strong></p>
+      <p>Usuario: Visitante, Contraseña: 123</p>
+      <p style="margin-top: 10px; font-size: 12px; color: #888;">
+        Después de ingresar, solo podrá ver pero no podras modificar datos
+      </p>
+    </div>
+  </div>
 </div>
 
-<!-- ===== ALUMNOS ===== -->
-<section id="alumnos" class="modulo" aria-hidden="true">
-  <h2>Alumnos</h2>
-  <div class="formulario" role="group" aria-label="Formulario alumnos">
-    <input id="nombreAlumno" type="text" placeholder="Nombre completo">
-    <select id="padreAlumno"><option value="">Seleccionar padre/tutor</option></select>
-    <textarea id="comentariosAlumno" placeholder="Comentarios"></textarea>
+<!-- APLICACIÓN PRINCIPAL -->
+<div id="main-app">
+  <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
 
-    <div class="row" style="justify-content:center;">
-      <button id="btnGuardarAlumno" class="form-btn" onclick="guardarAlumno(this)">Guardar</button>
-      <span id="saveMsgAlumno" class="mensaje-boton" aria-live="polite" style="display:none"></span>
+  <header>
+    <h1>Control de asistencias y pagos<br><span class="subtitulo">UE Bolivia Venezuela</span></h1>
+    <p id="user-info" style="font-size:14px; color:#666; margin-top:5px;"></p>
+  </header>
+
+  <!-- MENU -->
+  <div id="menu" aria-label="Menú principal">
+    <button onclick="abrirModulo('alumnos')">Alumnos</button>
+    <button onclick="abrirModulo('padres')">Padres</button>
+    <button onclick="abrirModulo('grupos')">Grupos</button>
+    <button onclick="abrirModulo('reuniones')">Reuniones</button>
+    <button onclick="abrirModulo('pagos')">Pagos</button>
+    <button onclick="abrirModulo('usuarios')" class="admin-only">Usuarios</button>
+    <button onclick="abrirModulo('bitacora')" class="admin-only">Bitácora</button>
+    <button class="btn-exportar admin-only operador-only" onclick="exportarDatos()">Exportar Datos a Excel</button>
+  </div>
+
+  <!-- ===== ALUMNOS ===== -->
+  <section id="alumnos" class="modulo" aria-hidden="true">
+    <h2>Alumnos</h2>
+    <div class="formulario" role="group" aria-label="Formulario alumnos">
+      <input id="nombreAlumno" type="text" placeholder="Nombre completo">
+      <select id="padreAlumno"><option value="">Seleccionar padre/tutor</option></select>
+      <textarea id="comentariosAlumno" placeholder="Comentarios"></textarea>
+
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarAlumno" class="form-btn admin-only operador-only" onclick="guardarAlumno(this)">Guardar</button>
+        <span id="saveMsgAlumno" class="mensaje-boton" aria-live="polite" style="display:none"></span>
+      </div>
     </div>
-  </div>
 
-  <input id="buscarAlumno" class="search" type="text" placeholder="Buscar alumno (por nombre parcial)">
-  <div id="listaAlumnos" class="lista" aria-live="polite"></div>
-  <div style="text-align:center">
-    <button class="btn-exportar" onclick="exportarAlumnosExcel()">Exportar Alumnos a Excel</button>
-    <button class="volver" onclick="volverMenu()">Volver</button>
-  </div>
-</section>
-
-<!-- ===== PADRES ===== -->
-<section id="padres" class="modulo" aria-hidden="true">
-  <h2>Padres / Tutores</h2>
-  <div class="formulario" role="group">
-    <input id="nombrePadre" type="text" placeholder="Nombre completo">
-    <input id="telefonoPadre" type="text" placeholder="Teléfono">
-    <select id="grupoPadre"><option value="">Seleccionar grupo</option></select>
-    <div class="row" style="justify-content:center;">
-      <button id="btnGuardarPadre" class="form-btn" onclick="guardarPadre(this)">Guardar</button>
-      <span id="saveMsgPadre" class="mensaje-boton" style="display:none"></span>
+    <input id="buscarAlumno" class="search" type="text" placeholder="Buscar alumno (por nombre parcial)">
+    <div id="listaAlumnos" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar admin-only operador-only" onclick="exportarAlumnosExcel()">Exportar Alumnos a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
     </div>
-  </div>
+  </section>
 
-  <input id="buscarPadre" class="search" type="text" placeholder="Buscar padre (por nombre)">
-  <div id="listaPadres" class="lista" aria-live="polite"></div>
-  <div style="text-align:center">
-    <button class="btn-exportar" onclick="exportarPadresExcel()">Exportar Padres a Excel</button>
-    <button class="volver" onclick="volverMenu()">Volver</button>
-  </div>
-</section>
-
-<!-- ===== GRUPOS ===== -->
-<section id="grupos" class="modulo" aria-hidden="true">
-  <h2>Grupos</h2>
-  <div class="formulario" role="group">
-    <input id="nombreGrupo" type="text" placeholder="Nombre del grupo">
-    <textarea id="descripcionGrupo" placeholder="Descripción (opcional)"></textarea>
-    <div class="row" style="justify-content:center;">
-      <button id="btnGuardarGrupo" class="form-btn" onclick="guardarGrupo(this)">Guardar</button>
-      <span id="saveMsgGrupo" class="mensaje-boton" style="display:none"></span>
+  <!-- ===== PADRES ===== -->
+  <section id="padres" class="modulo" aria-hidden="true">
+    <h2>Padres / Tutores</h2>
+    <div class="formulario" role="group">
+      <input id="nombrePadre" type="text" placeholder="Nombre completo">
+      <input id="telefonoPadre" type="text" placeholder="Teléfono">
+      <select id="grupoPadre"><option value="">Seleccionar grupo</option></select>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarPadre" class="form-btn admin-only operador-only" onclick="guardarPadre(this)">Guardar</button>
+        <span id="saveMsgPadre" class="mensaje-boton" style="display:none"></span>
+      </div>
     </div>
-  </div>
 
-  <input id="buscarGrupo" class="search" type="text" placeholder="Buscar grupo">
-  <div id="listaGrupos" class="lista" aria-live="polite"></div>
-  <div style="text-align:center">
-    <button class="btn-exportar" onclick="exportarGruposExcel()">Exportar Grupos a Excel</button>
-    <button class="volver" onclick="volverMenu()">Volver</button>
-  </div>
-</section>
+    <input id="buscarPadre" class="search" type="text" placeholder="Buscar padre (por nombre)">
+    <div id="listaPadres" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar admin-only operador-only" onclick="exportarPadresExcel()">Exportar Padres a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
 
-<!-- ===== REUNIONES ===== -->
-<section id="reuniones" class="modulo" aria-hidden="true">
-  <h2>Reuniones</h2>
-  <div class="formulario" role="group" style="text-align: left;">
-    <input id="tituloReunion" type="text" placeholder="Título de la reunión">
-    <input id="fechaReunion" type="date">
-    <input id="horaReunion" type="time">
-    <textarea id="observacionesReunion" placeholder="Observaciones"></textarea>
+  <!-- ===== GRUPOS ===== -->
+  <section id="grupos" class="modulo" aria-hidden="true">
+    <h2>Grupos</h2>
+    <div class="formulario" role="group">
+      <input id="nombreGrupo" type="text" placeholder="Nombre del grupo">
+      <textarea id="descripcionGrupo" placeholder="Descripción (opcional)"></textarea>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarGrupo" class="form-btn admin-only operador-only" onclick="guardarGrupo(this)">Guardar</button>
+        <span id="saveMsgGrupo" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
 
-    <h4 style="margin:8px 0 6px; text-align:left;">Seleccionar padres presentes:</h4>
+    <input id="buscarGrupo" class="search" type="text" placeholder="Buscar grupo">
+    <div id="listaGrupos" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar admin-only operador-only" onclick="exportarGruposExcel()">Exportar Grupos a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== REUNIONES ===== -->
+  <section id="reuniones" class="modulo" aria-hidden="true">
+    <h2>Reuniones</h2>
+    <div class="formulario" role="group" style="text-align: left;">
+      <input id="tituloReunion" type="text" placeholder="Título de la reunión">
+      <input id="fechaReunion" type="date">
+      <input id="horaReunion" type="time">
+      <textarea id="observacionesReunion" placeholder="Observaciones"></textarea>
+
+      <h4 style="margin:8px 0 6px; text-align:left;">Seleccionar padres presentes:</h4>
+      
+      <!-- Filtro por grupos -->
+      <select id="filtroGrupoReunion" class="filtro-grupo">
+        <option value="">Todos los grupos</option>
+      </select>
+      
+      <div id="listaPadresCheck" aria-label="Lista de padres con checkbox"></div>
+
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarReunion" class="form-btn admin-only operador-only" onclick="guardarReunion(this)">Guardar reunión</button>
+        <span id="saveMsgReunion" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarReunion" class="search" type="text" placeholder="Buscar reunión (por título)">
+    <div id="listaReuniones" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar admin-only operador-only" onclick="exportarReunionesExcel()">Exportar Reuniones a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== PAGOS ===== -->
+  <section id="pagos" class="modulo" aria-hidden="true">
+    <h2>Pagos</h2>
+    <div class="formulario" role="group">
+      <select id="alumnoPago"><option value="">Seleccionar alumno</option></select>
+      <input id="montoPago" type="number" placeholder="Monto (Bs)" min="0" step="0.01">
+      <input id="fechaPago" type="date">
+      <input id="conceptoPago" type="text" placeholder="Concepto / detalle">
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarPago" class="form-btn admin-only operador-only" onclick="guardarPago(this)">Guardar pago</button>
+        <span id="saveMsgPago" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarPago" class="search" type="text" placeholder="Buscar pagos (por alumno)">
+    <div id="listaPagos" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar admin-only operador-only" onclick="exportarPagosExcel()">Exportar Pagos a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== USUARIOS ===== -->
+  <section id="usuarios" class="modulo" aria-hidden="true">
+    <h2>Gestión de Usuarios</h2>
+    <div class="formulario" role="group">
+      <input id="nombreUsuario" type="text" placeholder="Nombre de usuario">
+      <input id="passwordUsuario" type="password" placeholder="Contraseña">
+      <select id="tipoUsuario">
+        <option value="admin">Administrador</option>
+        <option value="operador">Operador</option>
+        <option value="visitante">Visitante</option>
+      </select>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarUsuario" class="form-btn admin-only" onclick="guardarUsuario(this)">Guardar Usuario</button>
+        <span id="saveMsgUsuario" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarUsuario" class="search" type="text" placeholder="Buscar usuario">
+    <div id="listaUsuarios" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== BITÁCORA ===== -->
+  <section id="bitacora" class="modulo" aria-hidden="true">
+    <h2>Bitácora del Sistema</h2>
     
-    <!-- Filtro por grupos -->
-    <select id="filtroGrupoReunion" class="filtro-grupo">
-      <option value="">Todos los grupos</option>
-    </select>
-    
-    <div id="listaPadresCheck" aria-label="Lista de padres con checkbox"></div>
-
-    <div class="row" style="justify-content:center;">
-      <button id="btnGuardarReunion" class="form-btn" onclick="guardarReunion(this)">Guardar reunión</button>
-      <span id="saveMsgReunion" class="mensaje-boton" style="display:none"></span>
+    <div class="formulario" role="group">
+      <div class="row" style="justify-content:center; gap: 10px;">
+        <button class="form-btn" onclick="filtrarBitacora('todos')">Todos</button>
+        <button class="form-btn" onclick="filtrarBitacora('login')">Ingresos</button>
+        <button class="form-btn" onclick="filtrarBitacora('seccion')">Secciones</button>
+        <button class="form-btn" onclick="filtrarBitacora('accion')">Acciones</button>
+      </div>
+      <div class="row" style="justify-content:center;">
+        <button class="form-btn admin-only" onclick="limpiarBitacora()">Limpiar Bitácora</button>
+        <button class="btn-exportar admin-only" onclick="exportarBitacoraExcel()">Exportar Bitácora</button>
+      </div>
     </div>
-  </div>
 
-  <input id="buscarReunion" class="search" type="text" placeholder="Buscar reunión (por título)">
-  <div id="listaReuniones" class="lista" aria-live="polite"></div>
-  <div style="text-align:center">
-    <button class="btn-exportar" onclick="exportarReunionesExcel()">Exportar Reuniones a Excel</button>
-    <button class="volver" onclick="volverMenu()">Volver</button>
-  </div>
-</section>
-
-<!-- ===== PAGOS ===== -->
-<section id="pagos" class="modulo" aria-hidden="true">
-  <h2>Pagos</h2>
-  <div class="formulario" role="group">
-    <select id="alumnoPago"><option value="">Seleccionar alumno</option></select>
-    <input id="montoPago" type="number" placeholder="Monto (Bs)" min="0" step="0.01">
-    <input id="fechaPago" type="date">
-    <input id="conceptoPago" type="text" placeholder="Concepto / detalle">
-    <div class="row" style="justify-content:center;">
-      <button id="btnGuardarPago" class="form-btn" onclick="guardarPago(this)">Guardar pago</button>
-      <span id="saveMsgPago" class="mensaje-boton" style="display:none"></span>
+    <div id="listaBitacora" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="volver" onclick="volverMenu()">Volver</button>
     </div>
-  </div>
-
-  <input id="buscarPago" class="search" type="text" placeholder="Buscar pagos (por alumno)">
-  <div id="listaPagos" class="lista" aria-live="polite"></div>
-  <div style="text-align:center">
-    <button class="btn-exportar" onclick="exportarPagosExcel()">Exportar Pagos a Excel</button>
-    <button class="volver" onclick="volverMenu()">Volver</button>
-  </div>
-</section>
+  </section>
+</div>
 
 <script>
+/* -----------------------------------------
+  SISTEMA DE GESTIÓN DE USUARIOS
+----------------------------------------- */
+let currentUser = null;
+
+// Inicializar usuarios si no existen - CORREGIDO
+function inicializarUsuarios() {
+  let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+  
+  // Si no hay usuarios o el array está vacío, crear el usuario admin por defecto
+  if (!usuarios || usuarios.length === 0) {
+    console.log("Creando usuario admin por defecto...");
+    usuarios = [
+      {
+        id: 1,
+        username: 'admin',
+        password: 'admin123',
+        tipo: 'admin',
+        fechaCreacion: new Date().toLocaleString('es-ES'),
+        activo: true
+      }
+    ];
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    console.log("Usuario admin creado:", usuarios[0]);
+  } else {
+    console.log("Usuarios existentes:", usuarios);
+  }
+  
+  return usuarios;
+}
+
+function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!username || !password) {
+    alert('Por favor complete usuario y contraseña');
+    return;
+  }
+
+  // Asegurar que los usuarios estén inicializados
+  inicializarUsuarios();
+  
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  console.log("Buscando usuario:", username, "en:", usuarios);
+  
+  const usuario = usuarios.find(u => u.username === username && u.password === password && u.activo);
+
+  if (usuario) {
+    currentUser = usuario;
+
+    // Registrar evento de login en la bitácora
+    registrarBitacora('login', 'Sistema', `Usuario ${username} ingresó al sistema`);
+
+    // Mostrar aplicación principal
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    
+    // Actualizar información del usuario
+    document.getElementById('user-info').textContent = 
+      `Usuario: ${username} (${obtenerNombreTipoUsuario(usuario.tipo)})`;
+    
+    // Configurar permisos según tipo de usuario
+    configurarPermisosPorRol(usuario.tipo);
+
+    // Inicializar la aplicación
+    initApp();
+  } else {
+    alert('Usuario o contraseña incorrectos');
+    console.log("Usuario no encontrado o contraseña incorrecta");
+  }
+}
+
+function obtenerNombreTipoUsuario(tipo) {
+  switch(tipo) {
+    case 'admin': return 'Administrador';
+    case 'operador': return 'Operador';
+    case 'visitante': return 'Visitante';
+    default: return 'Usuario';
+  }
+}
+
+function configurarPermisosPorRol(tipoUsuario) {
+  // Ocultar todos los elementos específicos por rol primero
+  document.querySelectorAll('.admin-only, .operador-only, .visitante-only').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Mostrar elementos según el rol
+  switch(tipoUsuario) {
+    case 'admin':
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      break;
+    case 'operador':
+      document.querySelectorAll('.operador-only').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      break;
+    case 'visitante':
+      document.querySelectorAll('.visitante-only').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      break;
+  }
+  
+  // Elementos que deben verse para múltiples roles
+  if (tipoUsuario === 'admin' || tipoUsuario === 'operador') {
+    document.querySelectorAll('.admin-only, .operador-only').forEach(el => {
+      el.style.display = 'inline-block';
+    });
+  }
+}
+
+function logout() {
+  // Registrar evento de logout en la bitácora
+  if (currentUser) {
+    registrarBitacora('login', 'Sistema', `Usuario ${currentUser.username} cerró sesión`);
+  }
+  
+  currentUser = null;
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
+
+// Permitir login con Enter
+document.getElementById('password').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    login();
+  }
+});
+
+/* -----------------------------------------
+  GESTIÓN DE USUARIOS
+----------------------------------------- */
+let editIndexUsuario = null;
+
+function guardarUsuario(btn) {
+  // Verificar permisos - solo admin puede gestionar usuarios
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const nombre = document.getElementById('nombreUsuario').value.trim();
+  const password = document.getElementById('passwordUsuario').value;
+  const tipo = document.getElementById('tipoUsuario').value;
+
+  if (!nombre) {
+    alert('El nombre de usuario es obligatorio');
+    return;
+  }
+
+  if (!password && editIndexUsuario === null) {
+    alert('La contraseña es obligatoria para nuevos usuarios');
+    return;
+  }
+
+  let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+
+  // Verificar si el usuario ya existe (excepto en edición)
+  if (editIndexUsuario === null) {
+    const usuarioExistente = usuarios.find(u => u.username === nombre);
+    if (usuarioExistente) {
+      alert('Ya existe un usuario con ese nombre');
+      return;
+    }
+  }
+
+  if (editIndexUsuario !== null) {
+    // Editar usuario existente
+    const usuario = usuarios[editIndexUsuario];
+    
+    // Si el usuario que se edita es el mismo que está logueado y se cambia a un rol con menos permisos
+    if (usuario.id === currentUser.id && (tipo === 'operador' || tipo === 'visitante')) {
+      if (!confirm('Si cambia su propio usuario a un rol con menos permisos, podría perder acceso a funciones. ¿Continuar?')) {
+        return;
+      }
+    }
+    
+    usuarios[editIndexUsuario] = {
+      ...usuario,
+      username: nombre,
+      tipo: tipo,
+      fechaModificacion: new Date().toLocaleString('es-ES')
+    };
+    
+    // Actualizar contraseña solo si se proporcionó una nueva
+    if (password) {
+      usuarios[editIndexUsuario].password = password;
+    }
+    
+    editIndexUsuario = null;
+    registrarBitacora('accion', 'Usuarios', `Editó usuario: ${nombre} (${tipo})`);
+  } else {
+    // Crear nuevo usuario
+    const nuevoUsuario = {
+      id: Date.now(),
+      username: nombre,
+      password: password,
+      tipo: tipo,
+      fechaCreacion: new Date().toLocaleString('es-ES'),
+      activo: true
+    };
+    
+    usuarios.push(nuevoUsuario);
+    registrarBitacora('accion', 'Usuarios', `Creó nuevo usuario: ${nombre} (${tipo})`);
+  }
+
+  localStorage.setItem('usuarios', JSON.stringify(usuarios));
+  tempSaved(btn, '✅ Usuario guardado');
+  limpiarUsuario();
+  mostrarUsuarios();
+}
+
+function limpiarUsuario() {
+  document.getElementById('nombreUsuario').value = '';
+  document.getElementById('passwordUsuario').value = '';
+  document.getElementById('tipoUsuario').value = 'admin';
+  editIndexUsuario = null;
+}
+
+function mostrarUsuarios() {
+  const cont = document.getElementById('listaUsuarios');
+  cont.innerHTML = '';
+  
+  const q = document.getElementById('buscarUsuario').value.trim().toLowerCase();
+  let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  
+  const lista = usuarios.filter(u => !q || u.username.toLowerCase().includes(q));
+  
+  if (lista.length === 0) {
+    cont.innerHTML = '<div class="item">No hay usuarios registrados.</div>';
+    return;
+  }
+  
+  lista.forEach((usuario, i) => {
+    const idx = usuarios.indexOf(usuario);
+    const div = document.createElement('div');
+    div.className = 'item';
+    
+    let badge = '';
+    switch(usuario.tipo) {
+      case 'admin':
+        badge = '<span class="badge-admin">Admin</span>';
+        break;
+      case 'operador':
+        badge = '<span class="badge-operador">Operador</span>';
+        break;
+      case 'visitante':
+        badge = '<span class="badge-visitante">Visitante</span>';
+        break;
+    }
+    
+    const estado = usuario.activo ? 
+      '<span style="color: green;">● Activo</span>' : 
+      '<span style="color: red;">● Inactivo</span>';
+    
+    div.innerHTML = `
+      <strong>${escapeHtml(usuario.username)}</strong> ${badge} ${estado}
+      <div class="detalles">
+        <p><b>Fecha creación:</b> ${escapeHtml(usuario.fechaCreacion)}</p>
+        ${usuario.fechaModificacion ? `<p><b>Última modificación:</b> ${escapeHtml(usuario.fechaModificacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only" onclick="editarUsuario(${idx})">Editar</button>
+          ${usuario.id !== currentUser.id ? `<button class="del admin-only" onclick="eliminarUsuario(${idx})">${usuario.activo ? 'Desactivar' : 'Activar'}</button>` : ''}
+          ${usuario.id !== currentUser.id ? `<button class="del admin-only" onclick="eliminarUsuarioPermanente(${idx})" style="background: #dc3545;">Eliminar</button>` : ''}
+        </div>
+      </div>
+    `;
+    
+    div.onclick = (e) => {
+      if (e.target.tagName.toLowerCase() === 'button') return;
+      const det = div.querySelector('.detalles');
+      det.style.display = det.style.display === 'block' ? 'none' : 'block';
+    };
+    
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarUsuario(i) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  const usuario = usuarios[i];
+  
+  document.getElementById('nombreUsuario').value = usuario.username;
+  document.getElementById('passwordUsuario').value = ''; // No mostrar contraseña actual
+  document.getElementById('tipoUsuario').value = usuario.tipo;
+  editIndexUsuario = i;
+  
+  abrirModulo('usuarios');
+}
+
+function eliminarUsuario(i) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  const usuario = usuarios[i];
+  
+  if (usuario.id === currentUser.id) {
+    alert('No puede desactivar su propio usuario');
+    return;
+  }
+  
+  const accion = usuario.activo ? 'desactivar' : 'activar';
+  
+  if (confirm(`¿Está seguro de ${accion} al usuario: ${usuario.username}?`)) {
+    usuarios[i].activo = !usuarios[i].activo;
+    usuarios[i].fechaModificacion = new Date().toLocaleString('es-ES');
+    
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    mostrarUsuarios();
+    
+    registrarBitacora('accion', 'Usuarios', 
+      `${usuario.activo ? 'Activó' : 'Desactivó'} usuario: ${usuario.username}`);
+  }
+}
+
+function eliminarUsuarioPermanente(i) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  const usuario = usuarios[i];
+  
+  if (usuario.id === currentUser.id) {
+    alert('No puede eliminar su propio usuario');
+    return;
+  }
+  
+  if (confirm(`¿Está seguro de ELIMINAR PERMANENTEMENTE al usuario: ${usuario.username}? Esta acción no se puede deshacer.`)) {
+    usuarios.splice(i, 1);
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    mostrarUsuarios();
+    
+    registrarBitacora('accion', 'Usuarios', `Eliminó permanentemente usuario: ${usuario.username}`);
+  }
+}
+
+document.getElementById('buscarUsuario').addEventListener('input', mostrarUsuarios);
+
+/* -----------------------------------------
+  SISTEMA DE BITÁCORA
+----------------------------------------- */
+function registrarBitacora(tipo, modulo, detalles) {
+  if (!currentUser) return;
+
+  const evento = {
+    id: Date.now(),
+    fecha: new Date().toLocaleString('es-ES'),
+    usuario: currentUser.username,
+    tipo: tipo, // 'login', 'seccion', 'accion'
+    modulo: modulo,
+    detalles: detalles
+  };
+
+  // Obtener bitácora actual o inicializar
+  let bitacora = JSON.parse(localStorage.getItem('bitacora') || '[]');
+  bitacora.unshift(evento); // Agregar al principio para mostrar los más recientes primero
+  
+  // Mantener solo los últimos 1000 eventos para no saturar localStorage
+  if (bitacora.length > 1000) {
+    bitacora = bitacora.slice(0, 1000);
+  }
+  
+  localStorage.setItem('bitacora', JSON.stringify(bitacora));
+}
+
+function mostrarBitacora(filtro = 'todos') {
+  const cont = document.getElementById('listaBitacora');
+  cont.innerHTML = '';
+  
+  let bitacora = JSON.parse(localStorage.getItem('bitacora') || '[]');
+  
+  // Aplicar filtro si es necesario
+  if (filtro !== 'todos') {
+    bitacora = bitacora.filter(evento => evento.tipo === filtro);
+  }
+  
+  if (bitacora.length === 0) {
+    cont.innerHTML = '<div class="item">No hay eventos en la bitácora.</div>';
+    return;
+  }
+  
+  bitacora.forEach(evento => {
+    const div = document.createElement('div');
+    div.className = 'bitacora-item';
+    
+    let icono = '';
+    let color = '#4CAF50';
+    
+    switch(evento.tipo) {
+      case 'login':
+        icono = '🔐';
+        color = '#2196F3';
+        break;
+      case 'seccion':
+        icono = '📂';
+        color = '#FF9800';
+        break;
+      case 'accion':
+        icono = '✏️';
+        color = '#4CAF50';
+        break;
+      default:
+        icono = '📝';
+    }
+    
+    div.style.borderLeftColor = color;
+    
+    div.innerHTML = `
+      <div style="display: flex; justify-content: between; align-items: center;">
+        <span class="bitacora-tipo">${icono} ${evento.tipo.toUpperCase()}</span>
+        <span class="bitacora-fecha">${evento.fecha}</span>
+      </div>
+      <div class="bitacora-detalles">
+        <strong>Usuario:</strong> ${escapeHtml(evento.usuario)}<br>
+        <strong>Módulo:</strong> ${escapeHtml(evento.modulo)}<br>
+        <strong>Detalles:</strong> ${escapeHtml(evento.detalles)}
+      </div>
+    `;
+    
+    cont.appendChild(div);
+  });
+}
+
+function filtrarBitacora(filtro) {
+  mostrarBitacora(filtro);
+}
+
+function limpiarBitacora() {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  if (confirm('¿Está seguro de que desea limpiar toda la bitácora? Esta acción no se puede deshacer.')) {
+    localStorage.setItem('bitacora', '[]');
+    mostrarBitacora();
+    registrarBitacora('accion', 'Bitácora', 'Bitácora limpiada completamente');
+  }
+}
+
+function exportarBitacoraExcel() {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  let bitacora = JSON.parse(localStorage.getItem('bitacora') || '[]');
+  const columnas = ['fecha', 'usuario', 'tipo', 'modulo', 'detalles'];
+  const nombresColumnas = ['Fecha', 'Usuario', 'Tipo', 'Módulo', 'Detalles'];
+  exportarExcel(bitacora, 'bitacora', columnas, nombresColumnas);
+  
+  registrarBitacora('accion', 'Bitácora', 'Bitácora exportada a Excel');
+}
+
+/* -----------------------------------------
+  FUNCIÓN DE EMERGENCIA PARA RESTABLECER ADMIN
+  (Ejecutar en la consola del navegador)
+----------------------------------------- */
+function restablecerAdmin() {
+  let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  
+  // Buscar el usuario admin
+  const adminIndex = usuarios.findIndex(u => u.username === 'admin');
+  
+  if (adminIndex !== -1) {
+    // Restablecer contraseña a 'admin123'
+    usuarios[adminIndex].password = 'admin123';
+    usuarios[adminIndex].fechaModificacion = new Date().toLocaleString('es-ES');
+    
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    console.log('✅ Contraseña de admin restablecida a: admin123');
+    console.log('Usuarios actualizados:', usuarios);
+  } else {
+    // Crear usuario admin si no existe
+    usuarios.push({
+      id: 1,
+      username: 'admin',
+      password: 'admin123',
+      tipo: 'admin',
+      fechaCreacion: new Date().toLocaleString('es-ES'),
+      activo: true
+    });
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    console.log('✅ Usuario admin creado con contraseña: admin123');
+  }
+}
+
 /* -----------------------------------------
   Datos iniciales (arrays persistidos en localStorage)
 ----------------------------------------- */
@@ -387,6 +1130,22 @@ function abrirModulo(id){
   document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
   const sec = document.getElementById(id);
   sec.classList.add('active');
+  
+  // Registrar acceso a sección en la bitácora
+  let nombreModulo = '';
+  switch(id) {
+    case 'alumnos': nombreModulo = 'Alumnos'; break;
+    case 'padres': nombreModulo = 'Padres/Tutores'; break;
+    case 'grupos': nombreModulo = 'Grupos'; break;
+    case 'reuniones': nombreModulo = 'Reuniones'; break;
+    case 'pagos': nombreModulo = 'Pagos'; break;
+    case 'usuarios': nombreModulo = 'Usuarios'; break;
+    case 'bitacora': nombreModulo = 'Bitácora'; break;
+    default: nombreModulo = id;
+  }
+  
+  registrarBitacora('seccion', nombreModulo, `Accedió a la sección ${nombreModulo}`);
+  
   // cuando abrimos, recargar datos útiles
   if(id==='alumnos'){ cargarPadresSelect(); mostrarAlumnos(); }
   if(id==='padres'){ cargarGruposSelect(); mostrarPadres(); }
@@ -397,27 +1156,45 @@ function abrirModulo(id){
     mostrarReuniones(); 
   }
   if(id==='pagos'){ cargarAlumnosPago(); mostrarPagos(); }
+  if(id==='usuarios'){ mostrarUsuarios(); }
+  if(id==='bitacora'){ mostrarBitacora(); }
 }
+
 function volverMenu(){
   document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
   document.getElementById('menu').style.display = 'flex';
 }
 
+// El resto del código para alumnos, padres, grupos, reuniones, pagos, etc.
+// se mantiene igual que en la versión anterior...
+
 /* -------------------------
   ALUMNOS
 ------------------------- */
 function guardarAlumno(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const nombre = document.getElementById('nombreAlumno').value.trim();
   const padre = document.getElementById('padreAlumno').value;
   const comentarios = document.getElementById('comentariosAlumno').value.trim();
   if(!nombre) { alert('El nombre del alumno es obligatorio'); return; }
 
   if(editIndex.alumno !== null){
+    // Edición
+    const alumnoAnterior = alumnos[editIndex.alumno].nombre;
     alumnos[editIndex.alumno] = { nombre, padre, comentarios };
     editIndex.alumno = null;
+    registrarBitacora('accion', 'Alumnos', `Editó alumno: ${alumnoAnterior} -> ${nombre}`);
   } else {
+    // Nuevo
     alumnos.push({ nombre, padre, comentarios });
+    registrarBitacora('accion', 'Alumnos', `Agregó nuevo alumno: ${nombre}`);
   }
+  
   localStorage.setItem('alumnos', JSON.stringify(alumnos));
   tempSaved(btn);
   limpiarAlumno();
@@ -446,8 +1223,8 @@ function mostrarAlumnos(){
         <p><b>Padre/Tutor:</b> ${escapeHtml(a.padre||'-')}</p>
         <p><b>Comentarios:</b> ${escapeHtml(a.comentarios||'-')}</p>
         <div class="acciones">
-          <button class="edit" onclick="editarAlumno(${idx})">Editar</button>
-          <button class="del" onclick="eliminarAlumno(${idx})">Eliminar</button>
+          <button class="edit admin-only operador-only" onclick="editarAlumno(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarAlumno(${idx})">Eliminar</button>
         </div>
       </div>`;
     div.onclick = (e) => {
@@ -458,9 +1235,18 @@ function mostrarAlumnos(){
     };
     cont.appendChild(div);
   });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
 }
 
 function editarAlumno(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const a = alumnos[i];
   document.getElementById('nombreAlumno').value = a.nombre;
   document.getElementById('padreAlumno').value = a.padre || '';
@@ -470,11 +1256,19 @@ function editarAlumno(i){
 }
 
 function eliminarAlumno(i){
-  if(confirm('Eliminar este alumno?')) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const alumno = alumnos[i].nombre;
+  if(confirm(`¿Está seguro de eliminar al alumno: ${alumno}?`)) {
     alumnos.splice(i,1);
     localStorage.setItem('alumnos', JSON.stringify(alumnos));
     mostrarAlumnos();
     cargarAlumnosPago();
+    registrarBitacora('accion', 'Alumnos', `Eliminó alumno: ${alumno}`);
   }
 }
 document.getElementById('buscarAlumno').addEventListener('input', mostrarAlumnos);
@@ -495,15 +1289,28 @@ function cargarPadresSelect(){
   PADRES
 ------------------------- */
 function guardarPadre(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const nombre = document.getElementById('nombrePadre').value.trim();
   const telefono = document.getElementById('telefonoPadre').value.trim();
   const grupo = document.getElementById('grupoPadre').value;
   if(!nombre){ alert('El nombre del padre/tutor es obligatorio'); return; }
 
   if(editIndex.padre !== null){
+    // Edición
+    const padreAnterior = padres[editIndex.padre].nombre;
     padres[editIndex.padre] = { nombre, telefono, grupo };
     editIndex.padre = null;
-  } else padres.push({ nombre, telefono, grupo });
+    registrarBitacora('accion', 'Padres', `Editó padre/tutor: ${padreAnterior} -> ${nombre}`);
+  } else {
+    // Nuevo
+    padres.push({ nombre, telefono, grupo });
+    registrarBitacora('accion', 'Padres', `Agregó nuevo padre/tutor: ${nombre}`);
+  }
 
   localStorage.setItem('padres', JSON.stringify(padres));
   tempSaved(btn);
@@ -535,8 +1342,8 @@ function mostrarPadres(){
         <p><b>Teléfono:</b> ${escapeHtml(p.telefono||'-')}</p>
         <p><b>Grupo:</b> ${escapeHtml(p.grupo||'-')}</p>
         <div class="acciones">
-          <button class="edit" onclick="editarPadre(${idx})">Editar</button>
-          <button class="del" onclick="eliminarPadre(${idx})">Eliminar</button>
+          <button class="edit admin-only operador-only" onclick="editarPadre(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarPadre(${idx})">Eliminar</button>
         </div>
       </div>`;
     div.onclick = (e) => {
@@ -546,9 +1353,18 @@ function mostrarPadres(){
     };
     cont.appendChild(div);
   });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
 }
 
 function editarPadre(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const p = padres[i];
   document.getElementById('nombrePadre').value = p.nombre;
   document.getElementById('telefonoPadre').value = p.telefono || '';
@@ -558,13 +1374,21 @@ function editarPadre(i){
 }
 
 function eliminarPadre(i){
-  if(confirm('Eliminar este padre/tutor?')){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const padre = padres[i].nombre;
+  if(confirm(`¿Está seguro de eliminar al padre/tutor: ${padre}?`)){
     padres.splice(i,1);
     localStorage.setItem('padres', JSON.stringify(padres));
     mostrarPadres();
     cargarPadresSelect();
     cargarPadresCheck();
     cargarPadresEnSelect();
+    registrarBitacora('accion', 'Padres', `Eliminó padre/tutor: ${padre}`);
   }
 }
 document.getElementById('buscarPadre').addEventListener('input', mostrarPadres);
@@ -585,14 +1409,27 @@ function cargarGruposSelect(){
   GRUPOS
 ------------------------- */
 function guardarGrupo(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const nombre = document.getElementById('nombreGrupo').value.trim();
   const descripcion = document.getElementById('descripcionGrupo').value.trim();
   if(!nombre){ alert('El nombre del grupo es obligatorio'); return; }
 
   if(editIndex.grupo !== null){
+    // Edición
+    const grupoAnterior = grupos[editIndex.grupo].nombre;
     grupos[editIndex.grupo] = { nombre, descripcion };
     editIndex.grupo = null;
-  } else grupos.push({ nombre, descripcion });
+    registrarBitacora('accion', 'Grupos', `Editó grupo: ${grupoAnterior} -> ${nombre}`);
+  } else {
+    // Nuevo
+    grupos.push({ nombre, descripcion });
+    registrarBitacora('accion', 'Grupos', `Agregó nuevo grupo: ${nombre}`);
+  }
 
   localStorage.setItem('grupos', JSON.stringify(grupos));
   tempSaved(btn);
@@ -620,8 +1457,8 @@ function mostrarGrupos(){
       <div class="detalles">
         <p><b>Descripción:</b> ${escapeHtml(g.descripcion||'-')}</p>
         <div class="acciones">
-          <button class="edit" onclick="editarGrupo(${idx})">Editar</button>
-          <button class="del" onclick="eliminarGrupo(${idx})">Eliminar</button>
+          <button class="edit admin-only operador-only" onclick="editarGrupo(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarGrupo(${idx})">Eliminar</button>
         </div>
       </div>`;
     div.onclick = (e) => {
@@ -631,8 +1468,17 @@ function mostrarGrupos(){
     };
     cont.appendChild(div);
   });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
 }
 function editarGrupo(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const g = grupos[i];
   document.getElementById('nombreGrupo').value = g.nombre;
   document.getElementById('descripcionGrupo').value = g.descripcion || '';
@@ -640,11 +1486,19 @@ function editarGrupo(i){
   abrirModulo('grupos');
 }
 function eliminarGrupo(i){
-  if(confirm('Eliminar este grupo?')){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const grupo = grupos[i].nombre;
+  if(confirm(`¿Está seguro de eliminar el grupo: ${grupo}?`)){
     grupos.splice(i,1);
     localStorage.setItem('grupos', JSON.stringify(grupos));
     mostrarGrupos();
     cargarGruposSelect();
+    registrarBitacora('accion', 'Grupos', `Eliminó grupo: ${grupo}`);
   }
 }
 document.getElementById('buscarGrupo').addEventListener('input', mostrarGrupos);
@@ -700,6 +1554,12 @@ function filtrarPadresPorGrupo() {
 }
 
 function guardarReunion(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const titulo = document.getElementById('tituloReunion').value.trim();
   const fecha = document.getElementById('fechaReunion').value;
   const hora = document.getElementById('horaReunion').value;
@@ -719,9 +1579,16 @@ function guardarReunion(btn){
   if(!titulo){ alert('El título de la reunión es obligatorio'); return; }
 
   if(editIndex.reunion !== null){
+    // Edición
+    const reunionAnterior = reuniones[editIndex.reunion].titulo;
     reuniones[editIndex.reunion] = { titulo, fecha, hora, observaciones, presentes, ausentes };
     editIndex.reunion = null;
-  } else reuniones.push({ titulo, fecha, hora, observaciones, presentes, ausentes });
+    registrarBitacora('accion', 'Reuniones', `Editó reunión: ${reunionAnterior} -> ${titulo}`);
+  } else {
+    // Nueva
+    reuniones.push({ titulo, fecha, hora, observaciones, presentes, ausentes });
+    registrarBitacora('accion', 'Reuniones', `Agregó nueva reunión: ${titulo} con ${presentes.length} presentes`);
+  }
 
   localStorage.setItem('reuniones', JSON.stringify(reuniones));
   tempSaved(btn);
@@ -756,8 +1623,8 @@ function mostrarReuniones(){
         <p><b>Presentes:</b> ${r.presentes && r.presentes.length ? escapeHtml(r.presentes.join(', ')) : '-'}</p>
         <p><b>Ausentes:</b> ${r.ausentes && r.ausentes.length ? escapeHtml(r.ausentes.join(', ')) : '-'}</p>
         <div class="acciones">
-          <button class="edit" onclick="editarReunion(${idx})">Editar</button>
-          <button class="del" onclick="eliminarReunion(${idx})">Eliminar</button>
+          <button class="edit admin-only operador-only" onclick="editarReunion(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarReunion(${idx})">Eliminar</button>
         </div>
       </div>`;
     div.onclick = (e) => { 
@@ -767,8 +1634,17 @@ function mostrarReuniones(){
     };
     cont.appendChild(div);
   });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
 }
 function editarReunion(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const r = reuniones[i];
   document.getElementById('tituloReunion').value = r.titulo;
   document.getElementById('fechaReunion').value = r.fecha || '';
@@ -779,10 +1655,18 @@ function editarReunion(i){
   cargarPadresCheck(r.presentes || []);
 }
 function eliminarReunion(i){
-  if(confirm('Eliminar esta reunión?')){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const reunion = reuniones[i].titulo;
+  if(confirm(`¿Está seguro de eliminar la reunión: ${reunion}?`)){
     reuniones.splice(i,1);
     localStorage.setItem('reuniones', JSON.stringify(reuniones));
     mostrarReuniones();
+    registrarBitacora('accion', 'Reuniones', `Eliminó reunión: ${reunion}`);
   }
 }
 document.getElementById('buscarReunion').addEventListener('input', mostrarReuniones);
@@ -802,6 +1686,12 @@ function cargarAlumnosPago(){
 }
 
 function guardarPago(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const alumno = document.getElementById('alumnoPago').value;
   const monto = document.getElementById('montoPago').value.trim();
   const fecha = document.getElementById('fechaPago').value;
@@ -810,9 +1700,16 @@ function guardarPago(btn){
   if(!alumno || !monto){ alert('Seleccionar alumno y monto'); return; }
 
   if(editIndex.pago !== null){
+    // Edición
+    const pagoAnterior = pagos[editIndex.pago].alumno;
     pagos[editIndex.pago] = { alumno, monto, fecha, concepto };
     editIndex.pago = null;
-  } else pagos.push({ alumno, monto, fecha, concepto });
+    registrarBitacora('accion', 'Pagos', `Editó pago de: ${pagoAnterior} -> ${alumno}, monto: ${monto}`);
+  } else {
+    // Nuevo
+    pagos.push({ alumno, monto, fecha, concepto });
+    registrarBitacora('accion', 'Pagos', `Registró nuevo pago de: ${alumno}, monto: ${monto}`);
+  }
 
   localStorage.setItem('pagos', JSON.stringify(pagos));
   tempSaved(btn);
@@ -842,8 +1739,8 @@ function mostrarPagos(){
         <p><b>Fecha:</b> ${escapeHtml(p.fecha||'-')}</p>
         <p><b>Concepto:</b> ${escapeHtml(p.concepto||'-')}</p>
         <div class="acciones">
-          <button class="edit" onclick="editarPago(${idx})">Editar</button>
-          <button class="del" onclick="eliminarPago(${idx})">Eliminar</button>
+          <button class="edit admin-only operador-only" onclick="editarPago(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarPago(${idx})">Eliminar</button>
         </div>
       </div>`;
     div.onclick = (e) => { 
@@ -853,8 +1750,17 @@ function mostrarPagos(){
     };
     cont.appendChild(div);
   });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
 }
 function editarPago(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   const p = pagos[i];
   document.getElementById('alumnoPago').value = p.alumno;
   document.getElementById('montoPago').value = p.monto;
@@ -864,10 +1770,19 @@ function editarPago(i){
   abrirModulo('pagos');
 }
 function eliminarPago(i){
-  if(confirm('Eliminar este pago?')){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const pago = pagos[i].alumno;
+  const monto = pagos[i].monto;
+  if(confirm(`¿Está seguro de eliminar el pago de: ${pago} por ${monto}?`)){
     pagos.splice(i,1);
     localStorage.setItem('pagos', JSON.stringify(pagos));
     mostrarPagos();
+    registrarBitacora('accion', 'Pagos', `Eliminó pago de: ${pago}, monto: ${monto}`);
   }
 }
 document.getElementById('buscarPago').addEventListener('input', mostrarPagos);
@@ -876,6 +1791,12 @@ document.getElementById('buscarPago').addEventListener('input', mostrarPagos);
   FUNCIONES DE EXPORTACIÓN A EXCEL
 ------------------------- */
 function exportarExcel(datos, nombreArchivo, columnas, nombresColumnas) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   if (datos.length === 0) {
     alert(`No hay datos para exportar en ${nombreArchivo}`);
     return;
@@ -961,6 +1882,9 @@ function exportarExcel(datos, nombreArchivo, columnas, nombresColumnas) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
+  // Registrar en bitácora
+  registrarBitacora('accion', 'Exportación', `Exportó ${nombreArchivo} a Excel`);
 }
 
 function exportarAlumnosExcel() {
@@ -994,6 +1918,12 @@ function exportarPagosExcel() {
 }
 
 function exportarDatos() {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
   if (confirm('¿Exportar todos los datos a archivos Excel? Se descargarán 5 archivos.')) {
     exportarAlumnosExcel();
     setTimeout(() => exportarPadresExcel(), 300);
@@ -1024,7 +1954,10 @@ function cargarPadresEnSelect(){
 }
 
 /* Inicializar pantallas con datos guardados */
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
+  // Inicializar usuarios si no existen
+  inicializarUsuarios();
+  
   // populate basic lists so when user opens a module they see current data
   cargarPadresSelect();
   cargarGruposSelect();
@@ -1036,9 +1969,17 @@ document.addEventListener('DOMContentLoaded', () => {
   mostrarGrupos();
   mostrarReuniones();
   mostrarPagos();
+  mostrarUsuarios();
   
   // Event listener para el filtro de grupos en reuniones
   document.getElementById('filtroGrupoReunion').addEventListener('change', filtrarPadresPorGrupo);
+}
+
+// Inicializar la aplicación cuando se carga la página - CORREGIDO
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar usuarios automáticamente al cargar la página
+  inicializarUsuarios();
+  console.log("Aplicación inicializada, usuario admin creado si no existía");
 });
 </script>
 </body>
