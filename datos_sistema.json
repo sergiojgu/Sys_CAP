@@ -47,9 +47,27 @@
       "tipo": "operador",
       "fechaCreacion": "20/10/2025, 1:40:26",
       "activo": true
+    },
+    {
+      "id": 1760963478882,
+      "username": "Sergiojg",
+      "password": "FCO",
+      "tipo": "operador",
+      "grado": "3ro Primaria",
+      "fechaCreacion": "20/10/2025, 8:31:18",
+      "activo": true
     }
   ],
   "bitacora": [
+    {
+      "id": 1760963482249,
+      "fecha": "20/10/2025, 8:31:22",
+      "usuario": "root",
+      "tipo": "login",
+      "modulo": "Sistema",
+      "detalles": "Usuario root cerró sesión",
+      "grado": "Sistema"
+    },
     {
       "id": 1760963478883,
       "fecha": "20/10/2025, 8:31:18",
@@ -391,6 +409,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:31:18",
+  "fechaActualizacion": "20/10/2025, 8:31:22",
   "version": "1.0"
 }
