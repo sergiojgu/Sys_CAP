@@ -1,6 +1,14 @@
 {
   "alumnos": [],
-  "padres": [],
+  "padres": [
+    {
+      "nombre": "Sergio Javier Gutiérrez",
+      "telefono": "64071475",
+      "email": "sergiojg@gmail.com",
+      "grado": "3ro Primaria",
+      "fechaCreacion": "20/10/2025, 8:34:18"
+    }
+  ],
   "grupos": [],
   "reuniones": [],
   "pagos": [],
@@ -59,6 +67,15 @@
     }
   ],
   "bitacora": [
+    {
+      "id": 1760963707277,
+      "fecha": "20/10/2025, 8:35:07",
+      "usuario": "Sergiojg",
+      "tipo": "accion",
+      "modulo": "Padres",
+      "detalles": "Agregó nuevo padre/tutor: Juan de los palotes",
+      "grado": "3ro Primaria"
+    },
     {
       "id": 1760963658057,
       "fecha": "20/10/2025, 8:34:18",
@@ -472,6 +489,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:34:18",
+  "fechaActualizacion": "20/10/2025, 8:35:07",
   "version": "1.0"
 }
