@@ -60,6 +60,15 @@
   ],
   "bitacora": [
     {
+      "id": 1760963535381,
+      "fecha": "20/10/2025, 8:32:15",
+      "usuario": "root",
+      "tipo": "login",
+      "modulo": "Sistema",
+      "detalles": "Usuario root cerró sesión",
+      "grado": "Sistema"
+    },
+    {
       "id": 1760963523212,
       "fecha": "20/10/2025, 8:32:03",
       "usuario": "root",
@@ -427,6 +436,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:32:03",
+  "fechaActualizacion": "20/10/2025, 8:32:15",
   "version": "1.0"
 }
