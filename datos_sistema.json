@@ -60,6 +60,15 @@
   ],
   "bitacora": [
     {
+      "id": 1760963658057,
+      "fecha": "20/10/2025, 8:34:18",
+      "usuario": "Sergiojg",
+      "tipo": "accion",
+      "modulo": "Padres",
+      "detalles": "Agregó nuevo padre/tutor: Sergio Javier Gutiérrez",
+      "grado": "3ro Primaria"
+    },
+    {
       "id": 1760963591991,
       "fecha": "20/10/2025, 8:33:11",
       "usuario": "Sergiojg",
@@ -463,6 +472,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:33:11",
+  "fechaActualizacion": "20/10/2025, 8:34:18",
   "version": "1.0"
 }
