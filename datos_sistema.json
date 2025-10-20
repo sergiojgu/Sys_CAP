@@ -60,6 +60,15 @@
   ],
   "bitacora": [
     {
+      "id": 1760963557913,
+      "fecha": "20/10/2025, 8:32:37",
+      "usuario": "Sergiojg",
+      "tipo": "seccion",
+      "modulo": "Alumnos",
+      "detalles": "Accedió a la sección Alumnos",
+      "grado": "3ro Primaria"
+    },
+    {
       "id": 1760963551245,
       "fecha": "20/10/2025, 8:32:31",
       "usuario": "Sergiojg",
@@ -445,6 +454,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:32:31",
+  "fechaActualizacion": "20/10/2025, 8:32:37",
   "version": "1.0"
 }
