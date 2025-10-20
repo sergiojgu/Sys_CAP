@@ -7,6 +7,13 @@
       "email": "sergiojg@gmail.com",
       "grado": "3ro Primaria",
       "fechaCreacion": "20/10/2025, 8:34:18"
+    },
+    {
+      "nombre": "Juan de los palotes",
+      "telefono": "",
+      "email": "",
+      "grado": "3ro Primaria",
+      "fechaCreacion": "20/10/2025, 8:35:07"
     }
   ],
   "grupos": [],
@@ -67,6 +74,15 @@
     }
   ],
   "bitacora": [
+    {
+      "id": 1760963834857,
+      "fecha": "20/10/2025, 8:37:14",
+      "usuario": "Sergiojg",
+      "tipo": "login",
+      "modulo": "Sistema",
+      "detalles": "Usuario Sergiojg cerró sesión",
+      "grado": "3ro Primaria"
+    },
     {
       "id": 1760963707277,
       "fecha": "20/10/2025, 8:35:07",
@@ -489,6 +505,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:35:07",
+  "fechaActualizacion": "20/10/2025, 8:37:14",
   "version": "1.0"
 }
