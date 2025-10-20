@@ -60,6 +60,15 @@
   ],
   "bitacora": [
     {
+      "id": 1760963591991,
+      "fecha": "20/10/2025, 8:33:11",
+      "usuario": "Sergiojg",
+      "tipo": "seccion",
+      "modulo": "Padres/Tutores",
+      "detalles": "Accedió a la sección Padres/Tutores",
+      "grado": "3ro Primaria"
+    },
+    {
       "id": 1760963557913,
       "fecha": "20/10/2025, 8:32:37",
       "usuario": "Sergiojg",
@@ -454,6 +463,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:32:37",
+  "fechaActualizacion": "20/10/2025, 8:33:11",
   "version": "1.0"
 }
