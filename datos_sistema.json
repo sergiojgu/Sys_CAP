@@ -51,6 +51,15 @@
   ],
   "bitacora": [
     {
+      "id": 1760963370863,
+      "fecha": "20/10/2025, 8:29:30",
+      "usuario": "root",
+      "tipo": "seccion",
+      "modulo": "Padres/Tutores",
+      "detalles": "Accedió a la sección Padres/Tutores",
+      "grado": "Sistema"
+    },
+    {
       "id": 1760963366376,
       "fecha": "20/10/2025, 8:29:26",
       "usuario": "root",
@@ -364,6 +373,6 @@
       "detalles": "Bitácora limpiada completamente"
     }
   ],
-  "fechaActualizacion": "20/10/2025, 8:29:26",
+  "fechaActualizacion": "20/10/2025, 8:29:30",
   "version": "1.0"
 }
