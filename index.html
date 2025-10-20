@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Control de asistencias y pagos - Sistema Escolar</title>
+<style>
+  :root{
+    --bg:#f7f7f7; --card:#fff; --accent:#2e7d32; --btn:#4CAF50; --danger:#d9534f;
+    --primary: #2196F3; --secondary: #FF9800;
+  }
+  body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    margin:0;
+    color:#222;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* PANTALLA DE LOGIN */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #2e7d32, #4CAF50);
+  }
+  
+  .login-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .login-title {
+    color: #2e7d32;
+    margin-bottom: 10px;
+    font-size: 24px;
+  }
+  
+  .login-subtitle {
+    color: #666;
+    margin-bottom: 25px;
+  }
+  
+  .login-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+  }
+  
+  .login-btn:hover {
+    background: #1b5e20;
+  }
+  
+  .user-info {
+    font-size: 14px;
+    color: #666;
+    margin-top: 20px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+  }
+
+  /* CONTENIDO PRINCIPAL (oculto inicialmente) */
+  #main-app {
+    display: none;
+  }
+
+  header{
+    text-align:center;
+    padding:18px 10px 6px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  h1{
+    margin:0;
+    font-size:20px;
+    line-height:1.2;
+    color:#333;
+  }
+  h1 .subtitulo{ 
+    display:block; 
+    font-size:16px; 
+    color:#666; 
+    margin-top:6px; 
+  }
+
+  /* Menu - buttons single column centered */
+  #menu{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    padding:18px;
+  }
+  #menu button{
+    width: 88%;
+    max-width: 300px;
+    padding:10px 12px;
+    font-size:16px;
+    border-radius:10px;
+    border:0;
+    background:var(--btn);
+    color:white;
+    cursor:pointer;
+    transition:transform .08s, background .12s;
+  }
+  #menu button:hover{ transform:translateY(-2px); background:#45a049; }
+
+  /* Modules */
+  .modulo{ display:none; padding:16px; max-width:820px; margin:0 auto; box-sizing:border-box; }
+  .modulo.active{ display:block; }
+
+  .row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; align-items:center; margin-bottom:8px; }
+
+  .formulario{
+    background:var(--card);
+    padding:14px;
+    border-radius:10px;
+    box-shadow:0 1px 6px rgba(0,0,0,.06);
+  }
+  .formulario input, .formulario select, .formulario textarea {
+    width:84%;
+    max-width:480px;
+    padding:9px;
+    margin:8px auto;
+    font-size:15px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    display:block;
+  }
+  .form-btn {
+    display:inline-block;
+    background:var(--btn);
+    color:white;
+    border:0;
+    padding:9px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    margin-top:6px;
+    transition: all 0.3s ease;
+  }
+  .form-btn:disabled{ opacity:.7; cursor:not-allowed; }
+  .form-btn.saving {
+    background: #666;
+    transform: scale(0.98);
+  }
+
+  .mensaje-boton {
+    display:inline-block;
+    font-weight:700;
+    color:var(--accent);
+    margin-left:10px;
+    font-size:14px;
+  }
+
+  input[type="text"].small, input[type="date"].small { width:180px; display:inline-block; margin-right:8px; }
+
+  .lista {
+    margin-top:14px;
+    max-width:760px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:left;
+  }
+  .item{
+    background:#fff;
+    padding:10px;
+    border-radius:8px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+    margin-bottom:10px;
+    cursor:pointer;
+  }
+  .item strong{ color:var(--btn); }
+  .detalles{ display:none; margin-top:8px; border-top:1px solid #eee; padding-top:8px; font-size:14px; color:#333; }
+  .acciones button{ margin-right:8px; padding:6px 8px; border-radius:6px; border:0; cursor:pointer; font-weight:600; }
+  .acciones .edit{ background:#f0ad4e; color:#000; }
+  .acciones .del{ background:var(--danger); color:white; }
+
+  /* ESTILOS COMPLETAMENTE CORREGIDOS PARA LA LISTA DE PADRES */
+  #listaPadresCheck {
+    margin: 8px 0 0 0;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+    display: block;
+  }
+  .check-item {
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .check-item input {
+    margin: 0 10px 0 0;
+    width: auto;
+    transform: scale(1.2);
+    flex-shrink: 0;
+  }
+  .check-item label {
+    cursor: pointer;
+    font-size: 15px;
+    margin: 0;
+    display: block;
+  }
+
+  .volver {
+    display:inline-block;
+    margin-top:12px;
+    background:#666;
+    color:#fff;
+    padding:8px 12px;
+    border-radius:8px;
+    border:0;
+    cursor:pointer;
+  }
+
+  /* search inputs */
+  .search {
+    width:84%;
+    max-width:480px;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    display:block;
+    margin:10px auto 6px;
+  }
+
+  /* Filtro de grupos en reuniones */
+  .filtro-grupo {
+    width: 84%;
+    max-width: 480px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    display: block;
+    margin: 10px auto 6px;
+    font-size: 15px;
+  }
+
+  /* Botón de exportar */
+  .btn-exportar {
+    display: inline-block;
+    background: #2196F3;
+    color: white;
+    border: 0;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 6px;
+    transition: all 0.3s ease;
+  }
+  .btn-exportar:hover {
+    background: #0b7dda;
+  }
+
+  /* Botón de cerrar sesión */
+  .logout-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #666;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 1000;
+  }
+
+  /* Elementos deshabilitados para roles específicos */
+  .admin-only {
+    display: none;
+  }
+  
+  .operador-only {
+    display: none;
+  }
+  
+  .visitante-only {
+    display: none;
+  }
+
+  /* Estilos para la bitácora */
+  .bitacora-item {
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    margin-bottom: 10px;
+    border-left: 4px solid #4CAF50;
+  }
+  
+  .bitacora-tipo {
+    font-weight: bold;
+    color: #2e7d32;
+    margin-right: 8px;
+  }
+  
+  .bitacora-fecha {
+    color: #666;
+    font-size: 12px;
+  }
+  
+  .bitacora-detalles {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #333;
+  }
+
+  /* Estilos para usuarios */
+  .badge-admin {
+    background: #d9534f;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  
+  .badge-operador {
+    background: #f0ad4e;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  
+  .badge-visitante {
+    background: #5bc0de;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  /* Estilos para grados */
+  .grado-badge {
+    background: #9C27B0;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  /* responsive tweaks */
+  @media (max-width:520px){
+    #menu button{ width:92%; font-size:15px; }
+    .formulario input, .formulario select, .formulario textarea { width:94%; }
+  }
+
+  /* Indicador de guardado en GitHub */
+  .github-status {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 1000;
+  }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-container">
+    <h2 class="login-title">Control de Asistencias y Pagos</h2>
+    <p class="login-subtitle">UE Bolivia Venezuela</p>
+    
+    <input type="text" id="username" class="login-input" placeholder="Usuario">
+    <input type="password" id="password" class="login-input" placeholder="Contraseña">
+    
+    <button id="login-btn" class="login-btn" onclick="login()">Ingresar</button>
+    
+    <div class="user-info">
+      <p><strong>Usuario inicial:</strong></p>
+      <p>Usuario: Visitante, Contraseña: 123</p>
+      <p style="margin-top: 10px; font-size: 12px; color: #888;">
+       codigo ChiKito -- by SGA Labs ©
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- APLICACIÓN PRINCIPAL -->
+<div id="main-app">
+  <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+  <div id="github-status" class="github-status" style="display: none;">Guardando en GitHub...</div>
+
+  <header>
+    <h1>Control de asistencias y pagos<br><span class="subtitulo" id="header-subtitle">UE Bolivia Venezuela</span></h1>
+    <p id="user-info" style="font-size:14px; color:#666; margin-top:5px;"></p>
+  </header>
+
+  <!-- MENU -->
+  <div id="menu" aria-label="Menú principal">
+    <button onclick="abrirModulo('alumnos')">Alumnos</button>
+    <button onclick="abrirModulo('padres')">Padres</button>
+    <button onclick="abrirModulo('grupos')">Grupos</button>
+    <button onclick="abrirModulo('reuniones')">Reuniones</button>
+    <button onclick="abrirModulo('pagos')">Pagos</button>
+    <button onclick="abrirModulo('usuarios')" class="admin-only">Usuarios</button>
+    <button onclick="abrirModulo('bitacora')" class="admin-only">Bitácora</button>
+    <button class="btn-exportar" onclick="exportarDatos()">Exportar Datos a Excel</button>
+  </div>
+
+  <!-- ===== ALUMNOS ===== -->
+  <section id="alumnos" class="modulo" aria-hidden="true">
+    <h2>Alumnos <span id="grado-actual-alumnos" class="grado-badge"></span></h2>
+    <div class="formulario" role="group" aria-label="Formulario alumnos">
+      <input id="nombreAlumno" type="text" placeholder="Nombre completo">
+      <select id="gradoAlumno">
+        <option value="">Seleccionar grado</option>
+        <option value="1ro Primaria">1ro Primaria</option>
+        <option value="2do Primaria">2do Primaria</option>
+        <option value="3ro Primaria">3ro Primaria</option>
+        <option value="4to Primaria">4to Primaria</option>
+        <option value="5to Primaria">5to Primaria</option>
+        <option value="6to Primaria">6to Primaria</option>
+        <option value="1ro Secundaria">1ro Secundaria</option>
+        <option value="2do Secundaria">2do Secundaria</option>
+        <option value="3ro Secundaria">3ro Secundaria</option>
+        <option value="4to Secundaria">4to Secundaria</option>
+        <option value="5to Secundaria">5to Secundaria</option>
+        <option value="6to Secundaria">6to Secundaria</option>
+      </select>
+      <textarea id="comentariosAlumno" placeholder="Comentarios"></textarea>
+
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarAlumno" class="form-btn admin-only operador-only" onclick="guardarAlumno(this)">Guardar</button>
+        <span id="saveMsgAlumno" class="mensaje-boton" aria-live="polite" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarAlumno" class="search" type="text" placeholder="Buscar alumno (por nombre parcial)">
+    <div id="listaAlumnos" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar" onclick="exportarAlumnosExcel()">Exportar Alumnos a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== PADRES ===== -->
+  <section id="padres" class="modulo" aria-hidden="true">
+    <h2>Padres / Tutores <span id="grado-actual-padres" class="grado-badge"></span></h2>
+    <div class="formulario" role="group">
+      <input id="nombrePadre" type="text" placeholder="Nombre completo">
+      <input id="telefonoPadre" type="text" placeholder="Teléfono">
+      <input id="emailPadre" type="email" placeholder="Email">
+      <select id="gradoHijo">
+        <option value="">Grado del hijo</option>
+        <option value="1ro Primaria">1ro Primaria</option>
+        <option value="2do Primaria">2do Primaria</option>
+        <option value="3ro Primaria">3ro Primaria</option>
+        <option value="4to Primaria">4to Primaria</option>
+        <option value="5to Primaria">5to Primaria</option>
+        <option value="6to Primaria">6to Primaria</option>
+        <option value="1ro Secundaria">1ro Secundaria</option>
+        <option value="2do Secundaria">2do Secundaria</option>
+        <option value="3ro Secundaria">3ro Secundaria</option>
+        <option value="4to Secundaria">4to Secundaria</option>
+        <option value="5to Secundaria">5to Secundaria</option>
+        <option value="6to Secundaria">6to Secundaria</option>
+      </select>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarPadre" class="form-btn admin-only operador-only" onclick="guardarPadre(this)">Guardar</button>
+        <span id="saveMsgPadre" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarPadre" class="search" type="text" placeholder="Buscar padre (por nombre)">
+    <div id="listaPadres" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar" onclick="exportarPadresExcel()">Exportar Padres a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== GRUPOS ===== -->
+  <section id="grupos" class="modulo" aria-hidden="true">
+    <h2>Grupos <span id="grado-actual-grupos" class="grado-badge"></span></h2>
+    <div class="formulario" role="group">
+      <input id="nombreGrupo" type="text" placeholder="Nombre del grupo">
+      <select id="gradoGrupo">
+        <option value="">Seleccionar grado</option>
+        <option value="1ro Primaria">1ro Primaria</option>
+        <option value="2do Primaria">2do Primaria</option>
+        <option value="3ro Primaria">3ro Primaria</option>
+        <option value="4to Primaria">4to Primaria</option>
+        <option value="5to Primaria">5to Primaria</option>
+        <option value="6to Primaria">6to Primaria</option>
+        <option value="1ro Secundaria">1ro Secundaria</option>
+        <option value="2do Secundaria">2do Secundaria</option>
+        <option value="3ro Secundaria">3ro Secundaria</option>
+        <option value="4to Secundaria">4to Secundaria</option>
+        <option value="5to Secundaria">5to Secundaria</option>
+        <option value="6to Secundaria">6to Secundaria</option>
+      </select>
+      <textarea id="descripcionGrupo" placeholder="Descripción (opcional)"></textarea>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarGrupo" class="form-btn admin-only operador-only" onclick="guardarGrupo(this)">Guardar</button>
+        <span id="saveMsgGrupo" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarGrupo" class="search" type="text" placeholder="Buscar grupo">
+    <div id="listaGrupos" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar" onclick="exportarGruposExcel()">Exportar Grupos a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== REUNIONES ===== -->
+  <section id="reuniones" class="modulo" aria-hidden="true">
+    <h2>Reuniones <span id="grado-actual-reuniones" class="grado-badge"></span></h2>
+    <div class="formulario" role="group" style="text-align: left;">
+      <input id="tituloReunion" type="text" placeholder="Título de la reunión">
+      <input id="fechaReunion" type="date">
+      <input id="horaReunion" type="time">
+      <select id="gradoReunion">
+        <option value="">Grado de la reunión</option>
+        <option value="1ro Primaria">1ro Primaria</option>
+        <option value="2do Primaria">2do Primaria</option>
+        <option value="3ro Primaria">3ro Primaria</option>
+        <option value="4to Primaria">4to Primaria</option>
+        <option value="5to Primaria">5to Primaria</option>
+        <option value="6to Primaria">6to Primaria</option>
+        <option value="1ro Secundaria">1ro Secundaria</option>
+        <option value="2do Secundaria">2do Secundaria</option>
+        <option value="3ro Secundaria">3ro Secundaria</option>
+        <option value="4to Secundaria">4to Secundaria</option>
+        <option value="5to Secundaria">5to Secundaria</option>
+        <option value="6to Secundaria">6to Secundaria</option>
+      </select>
+      <textarea id="observacionesReunion" placeholder="Observaciones"></textarea>
+
+      <h4 style="margin:8px 0 6px; text-align:left;">Seleccionar padres presentes:</h4>
+      
+      <div id="listaPadresCheck" aria-label="Lista de padres con checkbox"></div>
+
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarReunion" class="form-btn admin-only operador-only" onclick="guardarReunion(this)">Guardar reunión</button>
+        <span id="saveMsgReunion" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarReunion" class="search" type="text" placeholder="Buscar reunión (por título)">
+    <div id="listaReuniones" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar" onclick="exportarReunionesExcel()">Exportar Reuniones a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== PAGOS ===== -->
+  <section id="pagos" class="modulo" aria-hidden="true">
+    <h2>Pagos <span id="grado-actual-pagos" class="grado-badge"></span></h2>
+    <div class="formulario" role="group">
+      <select id="alumnoPago"><option value="">Seleccionar alumno</option></select>
+      <input id="montoPago" type="number" placeholder="Monto (Bs)" min="0" step="0.01">
+      <input id="fechaPago" type="date">
+      <input id="conceptoPago" type="text" placeholder="Concepto / detalle">
+      <select id="mesPago">
+        <option value="">Seleccionar mes</option>
+        <option value="Enero">Enero</option>
+        <option value="Febrero">Febrero</option>
+        <option value="Marzo">Marzo</option>
+        <option value="Abril">Abril</option>
+        <option value="Mayo">Mayo</option>
+        <option value="Junio">Junio</option>
+        <option value="Julio">Julio</option>
+        <option value="Agosto">Agosto</option>
+        <option value="Septiembre">Septiembre</option>
+        <option value="Octubre">Octubre</option>
+        <option value="Noviembre">Noviembre</option>
+        <option value="Diciembre">Diciembre</option>
+      </select>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarPago" class="form-btn admin-only operador-only" onclick="guardarPago(this)">Guardar pago</button>
+        <span id="saveMsgPago" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarPago" class="search" type="text" placeholder="Buscar pagos (por alumno)">
+    <div id="listaPagos" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="btn-exportar" onclick="exportarPagosExcel()">Exportar Pagos a Excel</button>
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== USUARIOS ===== -->
+  <section id="usuarios" class="modulo" aria-hidden="true">
+    <h2>Gestión de Usuarios</h2>
+    <div class="formulario" role="group">
+      <input id="nombreUsuario" type="text" placeholder="Nombre de usuario">
+      <input id="passwordUsuario" type="password" placeholder="Contraseña">
+      <select id="tipoUsuario">
+        <option value="admin">Administrador</option>
+        <option value="operador">Operador</option>
+        <option value="visitante">Visitante</option>
+      </select>
+      <select id="gradoUsuario">
+        <option value="">Todos los grados (solo admin)</option>
+        <option value="1ro Primaria">1ro Primaria</option>
+        <option value="2do Primaria">2do Primaria</option>
+        <option value="3ro Primaria">3ro Primaria</option>
+        <option value="4to Primaria">4to Primaria</option>
+        <option value="5to Primaria">5to Primaria</option>
+        <option value="6to Primaria">6to Primaria</option>
+        <option value="1ro Secundaria">1ro Secundaria</option>
+        <option value="2do Secundaria">2do Secundaria</option>
+        <option value="3ro Secundaria">3ro Secundaria</option>
+        <option value="4to Secundaria">4to Secundaria</option>
+        <option value="5to Secundaria">5to Secundaria</option>
+        <option value="6to Secundaria">6to Secundaria</option>
+      </select>
+      <div class="row" style="justify-content:center;">
+        <button id="btnGuardarUsuario" class="form-btn admin-only" onclick="guardarUsuario(this)">Guardar Usuario</button>
+        <span id="saveMsgUsuario" class="mensaje-boton" style="display:none"></span>
+      </div>
+    </div>
+
+    <input id="buscarUsuario" class="search" type="text" placeholder="Buscar usuario">
+    <div id="listaUsuarios" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+
+  <!-- ===== BITÁCORA ===== -->
+  <section id="bitacora" class="modulo" aria-hidden="true">
+    <h2>Bitácora del Sistema</h2>
+    
+    <div class="formulario" role="group">
+      <div class="row" style="justify-content:center; gap: 10px;">
+        <button class="form-btn" onclick="filtrarBitacora('todos')">Todos</button>
+        <button class="form-btn" onclick="filtrarBitacora('login')">Ingresos</button>
+        <button class="form-btn" onclick="filtrarBitacora('seccion')">Secciones</button>
+        <button class="form-btn" onclick="filtrarBitacora('accion')">Acciones</button>
+      </div>
+      <div class="row" style="justify-content:center;">
+        <button class="form-btn admin-only" onclick="limpiarBitacora()">Limpiar Bitácora</button>
+        <button class="btn-exportar admin-only" onclick="exportarBitacoraExcel()">Exportar Bitácora</button>
+      </div>
+    </div>
+
+    <div id="listaBitacora" class="lista" aria-live="polite"></div>
+    <div style="text-align:center">
+      <button class="volver" onclick="volverMenu()">Volver</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* -----------------------------------------
+  CONFIGURACIÓN DE GITHUB
+----------------------------------------- */
+// Configuración para GitHub (debes reemplazar con tus datos)
+const GITHUB_CONFIG = {
+  token: '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', // tu token real
+  owner: 'sergiojgu',
+  repo: 'Sys_CAP',
+  dataFile: 'datos_sistema.json'
+};
+
+/* -----------------------------------------
+  SISTEMA DE GESTIÓN DE USUARIOS Y GRADOS
+----------------------------------------- */
+let currentUser = null;
+
+// Inicializar usuarios si no existen
+function inicializarUsuarios() {
+  let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+  
+  // Si no hay usuarios o el array está vacío, crear el usuario admin por defecto
+  if (!usuarios || usuarios.length === 0) {
+    console.log("Creando usuario admin por defecto...");
+    usuarios = [
+      {
+        id: 1,
+        username: 'admin',
+        password: 'admin123',
+        tipo: 'admin',
+        grado: '', // Admin ve todos los grados
+        fechaCreacion: new Date().toLocaleString('es-ES'),
+        activo: true
+      }
+    ];
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    console.log("Usuario admin creado:", usuarios[0]);
+    
+    // Guardar en GitHub después de inicializar
+    guardarEnGitHub();
+  } else {
+    console.log("Usuarios existentes:", usuarios);
+  }
+  
+  return usuarios;
+}
+
+function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!username || !password) {
+    alert('Por favor complete usuario y contraseña');
+    return;
+  }
+
+  // Asegurar que los usuarios estén inicializados
+  inicializarUsuarios();
+  
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  console.log("Buscando usuario:", username, "en:", usuarios);
+  
+  const usuario = usuarios.find(u => u.username === username && u.password === password && u.activo);
+
+  if (usuario) {
+    currentUser = usuario;
+
+    // Registrar evento de login en la bitácora
+    registrarBitacora('login', 'Sistema', `Usuario ${username} ingresó al sistema`);
+
+    // Mostrar aplicación principal
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    
+    // Actualizar información del usuario
+    const gradoInfo = usuario.grado ? ` - Grado: ${usuario.grado}` : '';
+    document.getElementById('user-info').textContent = 
+      `Usuario: ${username} (${obtenerNombreTipoUsuario(usuario.tipo)})${gradoInfo}`;
+    
+    // Configurar permisos según tipo de usuario
+    configurarPermisosPorRol(usuario.tipo);
+
+    // Actualizar badges de grado en los módulos
+    actualizarBadgesGrado();
+
+    // Inicializar la aplicación
+    initApp();
+  } else {
+    alert('Usuario o contraseña incorrectos');
+    console.log("Usuario no encontrado o contraseña incorrecta");
+  }
+}
+
+function obtenerNombreTipoUsuario(tipo) {
+  switch(tipo) {
+    case 'admin': return 'Administrador';
+    case 'operador': return 'Operador';
+    case 'visitante': return 'Visitante';
+    default: return 'Usuario';
+  }
+}
+
+function configurarPermisosPorRol(tipoUsuario) {
+  // Ocultar todos los elementos específicos por rol primero
+  document.querySelectorAll('.admin-only, .operador-only, .visitante-only').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Mostrar elementos según el rol
+  switch(tipoUsuario) {
+    case 'admin':
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      break;
+    case 'operador':
+      document.querySelectorAll('.operador-only').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      // OCULTAR ESPECÍFICAMENTE USUARIOS Y BITÁCORA PARA OPERADORES
+      document.querySelectorAll('button[onclick*="usuarios"], button[onclick*="bitacora"]').forEach(el => {
+        el.style.display = 'none';
+      });
+      break;
+    case 'visitante':
+      // Los visitantes solo pueden ver, no modificar
+      document.querySelectorAll('.visitante-only').forEach(el => {
+        el.style.display = 'inline-block';
+      });
+      // Ocultar botones de guardar y acciones
+      document.querySelectorAll('.form-btn, .acciones button').forEach(el => {
+        if (!el.classList.contains('btn-exportar') && !el.classList.contains('volver')) {
+          el.style.display = 'none';
+        }
+      });
+      break;
+  }
+  
+  // Elementos que deben verse para múltiples roles
+  if (tipoUsuario === 'admin' || tipoUsuario === 'operador') {
+    document.querySelectorAll('.admin-only, .operador-only').forEach(el => {
+      el.style.display = 'inline-block';
+    });
+  }
+}
+
+function actualizarBadgesGrado() {
+  const grado = currentUser.grado || 'Todos los grados';
+  document.querySelectorAll('[id^="grado-actual-"]').forEach(el => {
+    el.textContent = grado;
+  });
+}
+
+function logout() {
+  // Registrar evento de logout en la bitácora
+  if (currentUser) {
+    registrarBitacora('login', 'Sistema', `Usuario ${currentUser.username} cerró sesión`);
+  }
+  
+  currentUser = null;
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  volverMenu(); // Asegurarse de volver al menú principal
+}
+
+// Permitir login con Enter
+document.getElementById('password').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    login();
+  }
+});
+
+/* -----------------------------------------
+  GESTIÓN DE USUARIOS (MEJORADA CON GRADO)
+----------------------------------------- */
+let editIndexUsuario = null;
+
+function guardarUsuario(btn) {
+  // Verificar permisos - solo admin puede gestionar usuarios
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const nombre = document.getElementById('nombreUsuario').value.trim();
+  const password = document.getElementById('passwordUsuario').value;
+  const tipo = document.getElementById('tipoUsuario').value;
+  const grado = document.getElementById('gradoUsuario').value;
+
+  if (!nombre) {
+    alert('El nombre de usuario es obligatorio');
+    return;
+  }
+
+  if (!password && editIndexUsuario === null) {
+    alert('La contraseña es obligatoria para nuevos usuarios');
+    return;
+  }
+
+  let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+
+  // Verificar si el usuario ya existe (excepto en edición)
+  if (editIndexUsuario === null) {
+    const usuarioExistente = usuarios.find(u => u.username === nombre);
+    if (usuarioExistente) {
+      alert('Ya existe un usuario con ese nombre');
+      return;
+    }
+  }
+
+  // Validar que solo los admin pueden tener acceso a todos los grados
+  if (tipo !== 'admin' && !grado) {
+    alert('Los usuarios no administradores deben tener un grado asignado');
+    return;
+  }
+
+  if (editIndexUsuario !== null) {
+    // Editar usuario existente
+    const usuario = usuarios[editIndexUsuario];
+    
+    // Si el usuario que se edita es el mismo que está logueado y se cambia a un rol con menos permisos
+    if (usuario.id === currentUser.id && (tipo === 'operador' || tipo === 'visitante')) {
+      if (!confirm('Si cambia su propio usuario a un rol con menos permisos, podría perder acceso a funciones. ¿Continuar?')) {
+        return;
+      }
+    }
+    
+    usuarios[editIndexUsuario] = {
+      ...usuario,
+      username: nombre,
+      tipo: tipo,
+      grado: tipo === 'admin' ? '' : grado,
+      fechaModificacion: new Date().toLocaleString('es-ES')
+    };
+    
+    // Actualizar contraseña solo si se proporcionó una nueva
+    if (password) {
+      usuarios[editIndexUsuario].password = password;
+    }
+    
+    editIndexUsuario = null;
+    registrarBitacora('accion', 'Usuarios', `Editó usuario: ${nombre} (${tipo})`);
+  } else {
+    // Crear nuevo usuario
+    const nuevoUsuario = {
+      id: Date.now(),
+      username: nombre,
+      password: password,
+      tipo: tipo,
+      grado: tipo === 'admin' ? '' : grado,
+      fechaCreacion: new Date().toLocaleString('es-ES'),
+      activo: true
+    };
+    
+    usuarios.push(nuevoUsuario);
+    registrarBitacora('accion', 'Usuarios', `Creó nuevo usuario: ${nombre} (${tipo})`);
+  }
+
+  localStorage.setItem('usuarios', JSON.stringify(usuarios));
+  tempSaved(btn, '✅ Usuario guardado');
+  limpiarUsuario();
+  mostrarUsuarios();
+  
+  // Guardar en GitHub después de modificar usuarios
+  guardarEnGitHub();
+}
+
+function limpiarUsuario() {
+  document.getElementById('nombreUsuario').value = '';
+  document.getElementById('passwordUsuario').value = '';
+  document.getElementById('tipoUsuario').value = 'admin';
+  document.getElementById('gradoUsuario').value = '';
+  editIndexUsuario = null;
+}
+
+function mostrarUsuarios() {
+  const cont = document.getElementById('listaUsuarios');
+  cont.innerHTML = '';
+  
+  const q = document.getElementById('buscarUsuario').value.trim().toLowerCase();
+  let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  
+  const lista = usuarios.filter(u => !q || u.username.toLowerCase().includes(q));
+  
+  if (lista.length === 0) {
+    cont.innerHTML = '<div class="item">No hay usuarios registrados.</div>';
+    return;
+  }
+  
+  lista.forEach((usuario, i) => {
+    const idx = usuarios.indexOf(usuario);
+    const div = document.createElement('div');
+    div.className = 'item';
+    
+    let badge = '';
+    switch(usuario.tipo) {
+      case 'admin':
+        badge = '<span class="badge-admin">Admin</span>';
+        break;
+      case 'operador':
+        badge = '<span class="badge-operador">Operador</span>';
+        break;
+      case 'visitante':
+        badge = '<span class="badge-visitante">Visitante</span>';
+        break;
+    }
+    
+    const gradoInfo = usuario.grado ? `<p><b>Grado asignado:</b> ${escapeHtml(usuario.grado)}</p>` : '<p><b>Grado asignado:</b> Todos los grados</p>';
+    
+    const estado = usuario.activo ? 
+      '<span style="color: green;">● Activo</span>' : 
+      '<span style="color: red;">● Inactivo</span>';
+    
+    div.innerHTML = `
+      <strong>${escapeHtml(usuario.username)}</strong> ${badge} ${estado}
+      <div class="detalles">
+        ${gradoInfo}
+        <p><b>Fecha creación:</b> ${escapeHtml(usuario.fechaCreacion)}</p>
+        ${usuario.fechaModificacion ? `<p><b>Última modificación:</b> ${escapeHtml(usuario.fechaModificacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only" onclick="editarUsuario(${idx})">Editar</button>
+          ${usuario.id !== currentUser.id ? `<button class="del admin-only" onclick="eliminarUsuario(${idx})">${usuario.activo ? 'Desactivar' : 'Activar'}</button>` : ''}
+          ${usuario.id !== currentUser.id ? `<button class="del admin-only" onclick="eliminarUsuarioPermanente(${idx})" style="background: #dc3545;">Eliminar</button>` : ''}
+        </div>
+      </div>
+    `;
+    
+    div.onclick = (e) => {
+      if (e.target.tagName.toLowerCase() === 'button') return;
+      const det = div.querySelector('.detalles');
+      det.style.display = det.style.display === 'block' ? 'none' : 'block';
+    };
+    
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarUsuario(i) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  const usuario = usuarios[i];
+  
+  document.getElementById('nombreUsuario').value = usuario.username;
+  document.getElementById('passwordUsuario').value = ''; // No mostrar contraseña actual
+  document.getElementById('tipoUsuario').value = usuario.tipo;
+  document.getElementById('gradoUsuario').value = usuario.grado || '';
+  editIndexUsuario = i;
+  
+  abrirModulo('usuarios');
+}
+
+function eliminarUsuario(i) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  const usuario = usuarios[i];
+  
+  if (usuario.id === currentUser.id) {
+    alert('No puede desactivar su propio usuario');
+    return;
+  }
+  
+  const accion = usuario.activo ? 'desactivar' : 'activar';
+  
+  if (confirm(`¿Está seguro de ${accion} al usuario: ${usuario.username}?`)) {
+    usuarios[i].activo = !usuarios[i].activo;
+    usuarios[i].fechaModificacion = new Date().toLocaleString('es-ES');
+    
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    mostrarUsuarios();
+    
+    registrarBitacora('accion', 'Usuarios', 
+      `${usuario.activo ? 'Activó' : 'Desactivó'} usuario: ${usuario.username}`);
+    
+    // Guardar en GitHub después de modificar usuarios
+    guardarEnGitHub();
+  }
+}
+
+function eliminarUsuarioPermanente(i) {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+  const usuario = usuarios[i];
+  
+  if (usuario.id === currentUser.id) {
+    alert('No puede eliminar su propio usuario');
+    return;
+  }
+  
+  if (confirm(`¿Está seguro de ELIMINAR PERMANENTEMENTE al usuario: ${usuario.username}? Esta acción no se puede deshacer.`)) {
+    usuarios.splice(i, 1);
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    mostrarUsuarios();
+    
+    registrarBitacora('accion', 'Usuarios', `Eliminó permanentemente usuario: ${usuario.username}`);
+    
+    // Guardar en GitHub después de modificar usuarios
+    guardarEnGitHub();
+  }
+}
+
+document.getElementById('buscarUsuario').addEventListener('input', mostrarUsuarios);
+
+/* -----------------------------------------
+  SISTEMA DE BITÁCORA
+----------------------------------------- */
+function registrarBitacora(tipo, modulo, detalles) {
+  if (!currentUser) return;
+
+  const evento = {
+    id: Date.now(),
+    fecha: new Date().toLocaleString('es-ES'),
+    usuario: currentUser.username,
+    tipo: tipo, // 'login', 'seccion', 'accion'
+    modulo: modulo,
+    detalles: detalles,
+    grado: currentUser.grado || 'Sistema'
+  };
+
+  // Obtener bitácora actual o inicializar
+  let bitacora = JSON.parse(localStorage.getItem('bitacora') || '[]');
+  bitacora.unshift(evento); // Agregar al principio para mostrar los más recientes primero
+  
+  // Mantener solo los últimos 1000 eventos para no saturar localStorage
+  if (bitacora.length > 1000) {
+    bitacora = bitacora.slice(0, 1000);
+  }
+  
+  localStorage.setItem('bitacora', JSON.stringify(bitacora));
+  
+  // Guardar en GitHub después de registrar en bitácora
+  guardarEnGitHub();
+}
+
+function mostrarBitacora(filtro = 'todos') {
+  const cont = document.getElementById('listaBitacora');
+  cont.innerHTML = '';
+  
+  let bitacora = JSON.parse(localStorage.getItem('bitacora') || '[]');
+  
+  // Aplicar filtro si es necesario
+  if (filtro !== 'todos') {
+    bitacora = bitacora.filter(evento => evento.tipo === filtro);
+  }
+  
+  if (bitacora.length === 0) {
+    cont.innerHTML = '<div class="item">No hay eventos en la bitácora.</div>';
+    return;
+  }
+  
+  bitacora.forEach(evento => {
+    const div = document.createElement('div');
+    div.className = 'bitacora-item';
+    
+    let icono = '';
+    let color = '#4CAF50';
+    
+    switch(evento.tipo) {
+      case 'login':
+        icono = '🔐';
+        color = '#2196F3';
+        break;
+      case 'seccion':
+        icono = '📂';
+        color = '#FF9800';
+        break;
+      case 'accion':
+        icono = '✏️';
+        color = '#4CAF50';
+        break;
+      default:
+        icono = '📝';
+    }
+    
+    div.style.borderLeftColor = color;
+    
+    div.innerHTML = `
+      <div style="display: flex; justify-content: between; align-items: center;">
+        <span class="bitacora-tipo">${icono} ${evento.tipo.toUpperCase()}</span>
+        <span class="bitacora-fecha">${evento.fecha}</span>
+      </div>
+      <div class="bitacora-detalles">
+        <strong>Usuario:</strong> ${escapeHtml(evento.usuario)}<br>
+        <strong>Módulo:</strong> ${escapeHtml(evento.modulo)}<br>
+        <strong>Grado:</strong> ${escapeHtml(evento.grado)}<br>
+        <strong>Detalles:</strong> ${escapeHtml(evento.detalles)}
+      </div>
+    `;
+    
+    cont.appendChild(div);
+  });
+}
+
+function filtrarBitacora(filtro) {
+  mostrarBitacora(filtro);
+}
+
+function limpiarBitacora() {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  if (confirm('¿Está seguro de que desea limpiar toda la bitácora? Esta acción no se puede deshacer.')) {
+    localStorage.setItem('bitacora', '[]');
+    mostrarBitacora();
+    registrarBitacora('accion', 'Bitácora', 'Bitácora limpiada completamente');
+    
+    // Guardar en GitHub después de limpiar bitácora
+    guardarEnGitHub();
+  }
+}
+
+function exportarBitacoraExcel() {
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  let bitacora = JSON.parse(localStorage.getItem('bitacora') || '[]');
+  const columnas = ['fecha', 'usuario', 'tipo', 'modulo', 'grado', 'detalles'];
+  const nombresColumnas = ['Fecha', 'Usuario', 'Tipo', 'Módulo', 'Grado', 'Detalles'];
+  exportarExcel(bitacora, 'bitacora', columnas, nombresColumnas);
+  
+  registrarBitacora('accion', 'Bitácora', 'Bitácora exportada a Excel');
+}
+
+/* -----------------------------------------
+  SISTEMA DE GUARDADO EN GITHUB
+----------------------------------------- */
+async function guardarEnGitHub() {
+  // Solo intentar guardar en GitHub si está configurado
+  if (!GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'ghp_tu_token_de_github_aqui') {
+    console.log('GitHub no configurado - guardando solo en localStorage');
+    return;
+  }
+
+  try {
+    // Mostrar indicador de guardado
+    const statusElement = document.getElementById('github-status');
+    statusElement.style.display = 'block';
+    statusElement.textContent = 'Guardando en GitHub...';
+    
+    // Recopilar todos los datos del sistema
+    const datosSistema = {
+      alumnos: JSON.parse(localStorage.getItem('alumnos') || '[]'),
+      padres: JSON.parse(localStorage.getItem('padres') || '[]'),
+      grupos: JSON.parse(localStorage.getItem('grupos') || '[]'),
+      reuniones: JSON.parse(localStorage.getItem('reuniones') || '[]'),
+      pagos: JSON.parse(localStorage.getItem('pagos') || '[]'),
+      usuarios: JSON.parse(localStorage.getItem('usuarios') || '[]'),
+      bitacora: JSON.parse(localStorage.getItem('bitacora') || '[]'),
+      fechaActualizacion: new Date().toLocaleString('es-ES'),
+      version: '1.0'
+    };
+
+    // Convertir a JSON
+    const datosJSON = JSON.stringify(datosSistema, null, 2);
+    
+    // Obtener el SHA del archivo existente (si existe)
+    let sha = null;
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}`,
+        {
+          headers: {
+            'Authorization': `token ${GITHUB_CONFIG.token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        sha = data.sha;
+      }
+    } catch (error) {
+      console.log('Archivo no encontrado, se creará uno nuevo');
+    }
+    
+    // Crear o actualizar el archivo
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${GITHUB_CONFIG.token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+          message: `Actualización automática - ${new Date().toLocaleString('es-ES')}`,
+          content: btoa(unescape(encodeURIComponent(datosJSON))),
+          sha: sha
+        })
+      }
+    );
+    
+    if (response.ok) {
+      statusElement.textContent = '✅ Guardado en GitHub';
+      console.log('Datos guardados en GitHub correctamente');
+    } else {
+      throw new Error(`Error al guardar en GitHub: ${response.status}`);
+    }
+    
+    // Ocultar el indicador después de 3 segundos
+    setTimeout(() => {
+      statusElement.style.display = 'none';
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Error al guardar en GitHub:', error);
+    const statusElement = document.getElementById('github-status');
+    statusElement.textContent = '❌ Error al guardar en GitHub';
+    statusElement.style.backgroundColor = '#d9534f';
+    
+    // Ocultar el indicador después de 5 segundos
+    setTimeout(() => {
+      statusElement.style.display = 'none';
+      statusElement.style.backgroundColor = '#333';
+    }, 5000);
+  }
+}
+
+/* -----------------------------------------
+  Datos iniciales (arrays persistidos en localStorage)
+----------------------------------------- */
+let alumnos = JSON.parse(localStorage.getItem('alumnos') || '[]');
+let padres = JSON.parse(localStorage.getItem('padres') || '[]');
+let grupos = JSON.parse(localStorage.getItem('grupos') || '[]');
+let reuniones = JSON.parse(localStorage.getItem('reuniones') || '[]');
+let pagos = JSON.parse(localStorage.getItem('pagos') || '[]');
+
+let editIndex = {
+  alumno: null,
+  padre: null,
+  grupo: null,
+  reunion: null,
+  pago: null
+};
+
+/* -------------------------
+  Util: mostrar mensaje en botón
+  recibe el elemento botón (btnEl) y el texto temporal
+------------------------- */
+function tempSaved(btnEl, text='✅ Guardado', ms=2000){
+  const original = btnEl.textContent;
+  btnEl.textContent = text;
+  btnEl.disabled = true;
+  btnEl.classList.add('saving');
+  setTimeout(() => { 
+    btnEl.textContent = original; 
+    btnEl.disabled = false; 
+    btnEl.classList.remove('saving');
+  }, ms);
+}
+
+/* -------------------------
+  Navegación
+------------------------- */
+function abrirModulo(id){
+  // Validar acceso para operadores - NO PUEDEN ACCEDER A USUARIOS NI BITÁCORA
+  if (currentUser && currentUser.tipo === 'operador' && (id === 'usuarios' || id === 'bitacora')) {
+    alert('No tiene permisos para acceder a esta sección');
+    return;
+  }
+  
+  document.getElementById('menu').style.display='none';
+  document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
+  const sec = document.getElementById(id);
+  sec.classList.add('active');
+  
+  // Registrar acceso a sección en la bitácora
+  let nombreModulo = '';
+  switch(id) {
+    case 'alumnos': nombreModulo = 'Alumnos'; break;
+    case 'padres': nombreModulo = 'Padres/Tutores'; break;
+    case 'grupos': nombreModulo = 'Grupos'; break;
+    case 'reuniones': nombreModulo = 'Reuniones'; break;
+    case 'pagos': nombreModulo = 'Pagos'; break;
+    case 'usuarios': nombreModulo = 'Usuarios'; break;
+    case 'bitacora': nombreModulo = 'Bitácora'; break;
+    default: nombreModulo = id;
+  }
+  
+  registrarBitacora('seccion', nombreModulo, `Accedió a la sección ${nombreModulo}`);
+  
+  // cuando abrimos, recargar datos útiles
+  if(id==='alumnos'){ mostrarAlumnos(); }
+  if(id==='padres'){ mostrarPadres(); }
+  if(id==='grupos'){ mostrarGrupos(); }
+  if(id==='reuniones'){ 
+    cargarPadresCheck(); 
+    mostrarReuniones(); 
+  }
+  if(id==='pagos'){ cargarAlumnosPago(); mostrarPagos(); }
+  if(id==='usuarios'){ mostrarUsuarios(); }
+  if(id==='bitacora'){ mostrarBitacora(); }
+}
+
+function volverMenu(){
+  document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
+  document.getElementById('menu').style.display = 'flex';
+}
+
+/* -------------------------
+  ALUMNOS (FILTRADO POR GRADO)
+------------------------- */
+function guardarAlumno(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const nombre = document.getElementById('nombreAlumno').value.trim();
+  const grado = document.getElementById('gradoAlumno').value;
+  const comentarios = document.getElementById('comentariosAlumno').value.trim();
+  
+  if(!nombre) { alert('El nombre del alumno es obligatorio'); return; }
+  if(!grado) { alert('El grado del alumno es obligatorio'); return; }
+
+  // Para usuarios no admin, verificar que están creando/modificando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== grado) {
+    alert('Solo puede crear/modificar alumnos en su grado asignado');
+    return;
+  }
+
+  if(editIndex.alumno !== null){
+    // Edición
+    const alumnoAnterior = alumnos[editIndex.alumno].nombre;
+    alumnos[editIndex.alumno] = { 
+      ...alumnos[editIndex.alumno],
+      nombre, 
+      grado,
+      comentarios 
+    };
+    editIndex.alumno = null;
+    registrarBitacora('accion', 'Alumnos', `Editó alumno: ${alumnoAnterior} -> ${nombre}`);
+  } else {
+    // Nuevo
+    alumnos.push({ 
+      nombre, 
+      grado,
+      comentarios,
+      fechaCreacion: new Date().toLocaleString('es-ES')
+    });
+    registrarBitacora('accion', 'Alumnos', `Agregó nuevo alumno: ${nombre}`);
+  }
+  
+  localStorage.setItem('alumnos', JSON.stringify(alumnos));
+  tempSaved(btn);
+  limpiarAlumno();
+  mostrarAlumnos();
+  cargarAlumnosPago(); // actualizar selector de pagos
+  
+  // Guardar en GitHub después de modificar alumnos
+  guardarEnGitHub();
+}
+
+function limpiarAlumno(){
+  document.getElementById('nombreAlumno').value='';
+  document.getElementById('gradoAlumno').value='';
+  document.getElementById('comentariosAlumno').value='';
+}
+
+function mostrarAlumnos(){
+  const cont = document.getElementById('listaAlumnos');
+  cont.innerHTML = '';
+  
+  // Filtrar alumnos por grado del usuario (si no es admin)
+  let alumnosFiltrados = alumnos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    alumnosFiltrados = alumnos.filter(a => a.grado === currentUser.grado);
+  }
+  
+  const q = document.getElementById('buscarAlumno').value.trim().toLowerCase();
+  const lista = alumnosFiltrados.filter(a => !q || a.nombre.toLowerCase().includes(q));
+  
+  if(lista.length === 0){ 
+    cont.innerHTML = '<div class="item">No hay alumnos.' + 
+      (currentUser.tipo !== 'admin' && currentUser.grado ? 
+        ' en el grado ' + currentUser.grado : '') + '</div>'; 
+    return; 
+  }
+  
+  lista.forEach((a, i) => {
+    const idx = alumnos.indexOf(a);
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${escapeHtml(a.nombre)}</strong> <small>(${escapeHtml(a.grado)})</small>
+      <div class="detalles">
+        <p><b>Grado:</b> ${escapeHtml(a.grado||'-')}</p>
+        <p><b>Comentarios:</b> ${escapeHtml(a.comentarios||'-')}</p>
+        ${a.fechaCreacion ? `<p><b>Fecha registro:</b> ${escapeHtml(a.fechaCreacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only operador-only" onclick="editarAlumno(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarAlumno(${idx})">Eliminar</button>
+        </div>
+      </div>`;
+    div.onclick = (e) => {
+      // evitar toggle si se clickeó un botón interno
+      if(e.target.tagName.toLowerCase() === 'button') return;
+      const det = div.querySelector('.detalles');
+      det.style.display = det.style.display === 'block' ? 'none' : 'block';
+    };
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarAlumno(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const a = alumnos[i];
+  
+  // Para usuarios no admin, verificar que están editando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== a.grado) {
+    alert('Solo puede editar alumnos en su grado asignado');
+    return;
+  }
+  
+  document.getElementById('nombreAlumno').value = a.nombre;
+  document.getElementById('gradoAlumno').value = a.grado || '';
+  document.getElementById('comentariosAlumno').value = a.comentarios || '';
+  editIndex.alumno = i;
+  abrirModulo('alumnos');
+}
+
+function eliminarAlumno(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const alumno = alumnos[i];
+  
+  // Para usuarios no admin, verificar que están eliminando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== alumno.grado) {
+    alert('Solo puede eliminar alumnos en su grado asignado');
+    return;
+  }
+  
+  if(confirm(`¿Está seguro de eliminar al alumno: ${alumno.nombre}?`)) {
+    alumnos.splice(i,1);
+    localStorage.setItem('alumnos', JSON.stringify(alumnos));
+    mostrarAlumnos();
+    cargarAlumnosPago();
+    registrarBitacora('accion', 'Alumnos', `Eliminó alumno: ${alumno.nombre}`);
+    
+    // Guardar en GitHub después de eliminar alumno
+    guardarEnGitHub();
+  }
+}
+
+document.getElementById('buscarAlumno').addEventListener('input', mostrarAlumnos);
+
+// Las funciones para padres, grupos, reuniones y pagos necesitan adaptaciones similares
+// para filtrar por grado del usuario...
+
+/* -------------------------
+  PADRES (FILTRADO POR GRADO)
+------------------------- */
+function guardarPadre(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const nombre = document.getElementById('nombrePadre').value.trim();
+  const telefono = document.getElementById('telefonoPadre').value.trim();
+  const email = document.getElementById('emailPadre').value.trim();
+  const grado = document.getElementById('gradoHijo').value;
+  
+  if(!nombre){ alert('El nombre del padre/tutor es obligatorio'); return; }
+  if(!grado){ alert('El grado del hijo es obligatorio'); return; }
+
+  // Para usuarios no admin, verificar que están creando/modificando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== grado) {
+    alert('Solo puede crear/modificar padres en su grado asignado');
+    return;
+  }
+
+  if(editIndex.padre !== null){
+    // Edición
+    const padreAnterior = padres[editIndex.padre].nombre;
+    padres[editIndex.padre] = { 
+      ...padres[editIndex.padre],
+      nombre, 
+      telefono, 
+      email,
+      grado 
+    };
+    editIndex.padre = null;
+    registrarBitacora('accion', 'Padres', `Editó padre/tutor: ${padreAnterior} -> ${nombre}`);
+  } else {
+    // Nuevo
+    padres.push({ 
+      nombre, 
+      telefono, 
+      email,
+      grado,
+      fechaCreacion: new Date().toLocaleString('es-ES')
+    });
+    registrarBitacora('accion', 'Padres', `Agregó nuevo padre/tutor: ${nombre}`);
+  }
+
+  localStorage.setItem('padres', JSON.stringify(padres));
+  tempSaved(btn);
+  limpiarPadre();
+  mostrarPadres();
+  
+  // Guardar en GitHub después de modificar padres
+  guardarEnGitHub();
+}
+
+function limpiarPadre(){
+  document.getElementById('nombrePadre').value='';
+  document.getElementById('telefonoPadre').value='';
+  document.getElementById('emailPadre').value='';
+  document.getElementById('gradoHijo').value='';
+}
+
+function mostrarPadres(){
+  const cont = document.getElementById('listaPadres');
+  cont.innerHTML = '';
+  
+  // Filtrar padres por grado del usuario (si no es admin)
+  let padresFiltrados = padres;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    padresFiltrados = padres.filter(p => p.grado === currentUser.grado);
+  }
+  
+  const q = document.getElementById('buscarPadre').value.trim().toLowerCase();
+  const lista = padresFiltrados.filter(p => !q || p.nombre.toLowerCase().includes(q));
+  
+  if(lista.length === 0){ 
+    cont.innerHTML = '<div class="item">No hay padres/tutores.' + 
+      (currentUser.tipo !== 'admin' && currentUser.grado ? 
+        ' en el grado ' + currentUser.grado : '') + '</div>'; 
+    return; 
+  }
+  
+  lista.forEach((p,i) => {
+    const idx = padres.indexOf(p);
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${escapeHtml(p.nombre)}</strong> <small>(${escapeHtml(p.grado)})</small>
+      <div class="detalles">
+        <p><b>Teléfono:</b> ${escapeHtml(p.telefono||'-')}</p>
+        <p><b>Email:</b> ${escapeHtml(p.email||'-')}</p>
+        <p><b>Grado del hijo:</b> ${escapeHtml(p.grado||'-')}</p>
+        ${p.fechaCreacion ? `<p><b>Fecha registro:</b> ${escapeHtml(p.fechaCreacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only operador-only" onclick="editarPadre(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarPadre(${idx})">Eliminar</button>
+        </div>
+      </div>`;
+    div.onclick = (e) => {
+      if(e.target.tagName.toLowerCase() === 'button') return;
+      const det = div.querySelector('.detalles');
+      det.style.display = det.style.display === 'block' ? 'none' : 'block';
+    };
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarPadre(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const p = padres[i];
+  
+  // Para usuarios no admin, verificar que están editando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== p.grado) {
+    alert('Solo puede editar padres en su grado asignado');
+    return;
+  }
+  
+  document.getElementById('nombrePadre').value = p.nombre;
+  document.getElementById('telefonoPadre').value = p.telefono || '';
+  document.getElementById('emailPadre').value = p.email || '';
+  document.getElementById('gradoHijo').value = p.grado || '';
+  editIndex.padre = i;
+  abrirModulo('padres');
+}
+
+function eliminarPadre(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const padre = padres[i];
+  
+  // Para usuarios no admin, verificar que están eliminando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== padre.grado) {
+    alert('Solo puede eliminar padres en su grado asignado');
+    return;
+  }
+  
+  if(confirm(`¿Está seguro de eliminar al padre/tutor: ${padre.nombre}?`)){
+    padres.splice(i,1);
+    localStorage.setItem('padres', JSON.stringify(padres));
+    mostrarPadres();
+    registrarBitacora('accion', 'Padres', `Eliminó padre/tutor: ${padre.nombre}`);
+    
+    // Guardar en GitHub después de eliminar padre
+    guardarEnGitHub();
+  }
+}
+document.getElementById('buscarPadre').addEventListener('input', mostrarPadres);
+
+/* -------------------------
+  GRUPOS (FILTRADO POR GRADO)
+------------------------- */
+function guardarGrupo(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const nombre = document.getElementById('nombreGrupo').value.trim();
+  const grado = document.getElementById('gradoGrupo').value;
+  const descripcion = document.getElementById('descripcionGrupo').value.trim();
+  
+  if(!nombre){ alert('El nombre del grupo es obligatorio'); return; }
+  if(!grado){ alert('El grado del grupo es obligatorio'); return; }
+
+  // Para usuarios no admin, verificar que están creando/modificando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== grado) {
+    alert('Solo puede crear/modificar grupos en su grado asignado');
+    return;
+  }
+
+  if(editIndex.grupo !== null){
+    // Edición
+    const grupoAnterior = grupos[editIndex.grupo].nombre;
+    grupos[editIndex.grupo] = { 
+      ...grupos[editIndex.grupo],
+      nombre, 
+      grado,
+      descripcion 
+    };
+    editIndex.grupo = null;
+    registrarBitacora('accion', 'Grupos', `Editó grupo: ${grupoAnterior} -> ${nombre}`);
+  } else {
+    // Nuevo
+    grupos.push({ 
+      nombre, 
+      grado,
+      descripcion,
+      fechaCreacion: new Date().toLocaleString('es-ES')
+    });
+    registrarBitacora('accion', 'Grupos', `Agregó nuevo grupo: ${nombre}`);
+  }
+
+  localStorage.setItem('grupos', JSON.stringify(grupos));
+  tempSaved(btn);
+  limpiarGrupo();
+  mostrarGrupos();
+  
+  // Guardar en GitHub después de modificar grupos
+  guardarEnGitHub();
+}
+
+function limpiarGrupo(){
+  document.getElementById('nombreGrupo').value='';
+  document.getElementById('gradoGrupo').value='';
+  document.getElementById('descripcionGrupo').value='';
+}
+
+function mostrarGrupos(){
+  const cont = document.getElementById('listaGrupos');
+  cont.innerHTML = '';
+  
+  // Filtrar grupos por grado del usuario (si no es admin)
+  let gruposFiltrados = grupos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    gruposFiltrados = grupos.filter(g => g.grado === currentUser.grado);
+  }
+  
+  const q = document.getElementById('buscarGrupo').value.trim().toLowerCase();
+  const lista = gruposFiltrados.filter(g => !q || g.nombre.toLowerCase().includes(q));
+  
+  if(lista.length === 0){ 
+    cont.innerHTML = '<div class="item">No hay grupos.' + 
+      (currentUser.tipo !== 'admin' && currentUser.grado ? 
+        ' en el grado ' + currentUser.grado : '') + '</div>'; 
+    return; 
+  }
+  
+  lista.forEach((g,i)=>{
+    const idx = grupos.indexOf(g);
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${escapeHtml(g.nombre)}</strong> <small>(${escapeHtml(g.grado)})</small>
+      <div class="detalles">
+        <p><b>Grado:</b> ${escapeHtml(g.grado||'-')}</p>
+        <p><b>Descripción:</b> ${escapeHtml(g.descripcion||'-')}</p>
+        ${g.fechaCreacion ? `<p><b>Fecha registro:</b> ${escapeHtml(g.fechaCreacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only operador-only" onclick="editarGrupo(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarGrupo(${idx})">Eliminar</button>
+        </div>
+      </div>`;
+    div.onclick = (e) => {
+      if(e.target.tagName.toLowerCase() === 'button') return;
+      const det = div.querySelector('.detalles');
+      det.style.display = det.style.display === 'block' ? 'none' : 'block';
+    };
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarGrupo(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const g = grupos[i];
+  
+  // Para usuarios no admin, verificar que están editando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== g.grado) {
+    alert('Solo puede editar grupos en su grado asignado');
+    return;
+  }
+  
+  document.getElementById('nombreGrupo').value = g.nombre;
+  document.getElementById('gradoGrupo').value = g.grado || '';
+  document.getElementById('descripcionGrupo').value = g.descripcion || '';
+  editIndex.grupo = i;
+  abrirModulo('grupos');
+}
+
+function eliminarGrupo(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const grupo = grupos[i];
+  
+  // Para usuarios no admin, verificar que están eliminando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== grupo.grado) {
+    alert('Solo puede eliminar grupos en su grado asignado');
+    return;
+  }
+  
+  if(confirm(`¿Está seguro de eliminar el grupo: ${grupo.nombre}?`)){
+    grupos.splice(i,1);
+    localStorage.setItem('grupos', JSON.stringify(grupos));
+    mostrarGrupos();
+    registrarBitacora('accion', 'Grupos', `Eliminó grupo: ${grupo.nombre}`);
+    
+    // Guardar en GitHub después de eliminar grupo
+    guardarEnGitHub();
+  }
+}
+document.getElementById('buscarGrupo').addEventListener('input', mostrarGrupos);
+
+/* -------------------------
+  REUNIONES (FILTRADO POR GRADO)
+------------------------- */
+function cargarPadresCheck(presentes=[]){
+  const cont = document.getElementById('listaPadresCheck');
+  cont.innerHTML = '';
+  
+  // Filtrar padres por grado del usuario (si no es admin)
+  let padresFiltrados = padres;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    padresFiltrados = padres.filter(p => p.grado === currentUser.grado);
+  }
+  
+  if(padresFiltrados.length === 0){ 
+    cont.innerHTML = '<div class="item">No hay padres registrados.' + 
+      (currentUser.tipo !== 'admin' && currentUser.grado ? 
+        ' en el grado ' + currentUser.grado : '') + '</div>'; 
+    return; 
+  }
+  
+  padresFiltrados.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'check-item';
+    const id = 'chk_'+slugify(p.nombre);
+    div.innerHTML = `<input id="${id}" type="checkbox" value="${escapeHtml(p.nombre)}" ${presentes.includes(p.nombre) ? 'checked' : ''}> 
+                     <label for="${id}">${escapeHtml(p.nombre)} (${escapeHtml(p.grado)})</label>`;
+    cont.appendChild(div);
+  });
+}
+
+function guardarReunion(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const titulo = document.getElementById('tituloReunion').value.trim();
+  const fecha = document.getElementById('fechaReunion').value;
+  const hora = document.getElementById('horaReunion').value;
+  const grado = document.getElementById('gradoReunion').value;
+  const observaciones = document.getElementById('observacionesReunion').value.trim();
+  const checkboxes = document.querySelectorAll('#listaPadresCheck input[type="checkbox"]');
+  const presentes = [];
+  const ausentes = [];
+  
+  checkboxes.forEach(cb => { 
+    if(cb.checked) {
+      presentes.push(cb.value);
+    } else {
+      ausentes.push(cb.value);
+    }
+  });
+
+  if(!titulo){ alert('El título de la reunión es obligatorio'); return; }
+  if(!grado){ alert('El grado de la reunión es obligatorio'); return; }
+
+  // Para usuarios no admin, verificar que están creando/modificando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== grado) {
+    alert('Solo puede crear/modificar reuniones en su grado asignado');
+    return;
+  }
+
+  if(editIndex.reunion !== null){
+    // Edición
+    const reunionAnterior = reuniones[editIndex.reunion].titulo;
+    reuniones[editIndex.reunion] = { 
+      ...reuniones[editIndex.reunion],
+      titulo, 
+      fecha, 
+      hora, 
+      grado,
+      observaciones, 
+      presentes, 
+      ausentes 
+    };
+    editIndex.reunion = null;
+    registrarBitacora('accion', 'Reuniones', `Editó reunión: ${reunionAnterior} -> ${titulo}`);
+  } else {
+    // Nueva
+    reuniones.push({ 
+      titulo, 
+      fecha, 
+      hora, 
+      grado,
+      observaciones, 
+      presentes, 
+      ausentes,
+      fechaCreacion: new Date().toLocaleString('es-ES')
+    });
+    registrarBitacora('accion', 'Reuniones', `Agregó nueva reunión: ${titulo} con ${presentes.length} presentes`);
+  }
+
+  localStorage.setItem('reuniones', JSON.stringify(reuniones));
+  tempSaved(btn);
+  limpiarReunion();
+  mostrarReuniones();
+  
+  // Guardar en GitHub después de modificar reuniones
+  guardarEnGitHub();
+}
+
+function limpiarReunion(){
+  document.getElementById('tituloReunion').value='';
+  document.getElementById('fechaReunion').value='';
+  document.getElementById('horaReunion').value='';
+  document.getElementById('gradoReunion').value='';
+  document.getElementById('observacionesReunion').value='';
+  cargarPadresCheck();
+}
+
+function mostrarReuniones(){
+  const cont = document.getElementById('listaReuniones');
+  cont.innerHTML = '';
+  
+  // Filtrar reuniones por grado del usuario (si no es admin)
+  let reunionesFiltradas = reuniones;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    reunionesFiltradas = reuniones.filter(r => r.grado === currentUser.grado);
+  }
+  
+  const q = document.getElementById('buscarReunion').value.trim().toLowerCase();
+  const lista = reunionesFiltradas.filter(r => !q || r.titulo.toLowerCase().includes(q));
+  
+  if(lista.length === 0){ 
+    cont.innerHTML = '<div class="item">No hay reuniones.' + 
+      (currentUser.tipo !== 'admin' && currentUser.grado ? 
+        ' en el grado ' + currentUser.grado : '') + '</div>'; 
+    return; 
+  }
+  
+  lista.forEach((r,i) => {
+    const idx = reuniones.indexOf(r);
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${escapeHtml(r.titulo)}</strong> <small>(${escapeHtml(r.grado)})</small>
+      <div class="detalles">
+        <p><b>Fecha:</b> ${escapeHtml(r.fecha||'-')}</p>
+        <p><b>Hora:</b> ${escapeHtml(r.hora||'-')}</p>
+        <p><b>Grado:</b> ${escapeHtml(r.grado||'-')}</p>
+        <p><b>Observaciones:</b> ${escapeHtml(r.observaciones||'-')}</p>
+        <p><b>Presentes:</b> ${r.presentes && r.presentes.length ? escapeHtml(r.presentes.join(', ')) : '-'}</p>
+        <p><b>Ausentes:</b> ${r.ausentes && r.ausentes.length ? escapeHtml(r.ausentes.join(', ')) : '-'}</p>
+        ${r.fechaCreacion ? `<p><b>Fecha registro:</b> ${escapeHtml(r.fechaCreacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only operador-only" onclick="editarReunion(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarReunion(${idx})">Eliminar</button>
+        </div>
+      </div>`;
+    div.onclick = (e) => { 
+      if(e.target.tagName.toLowerCase()==='button') return; 
+      const det = div.querySelector('.detalles'); 
+      det.style.display = det.style.display === 'block' ? 'none' : 'block'; 
+    };
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarReunion(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const r = reuniones[i];
+  
+  // Para usuarios no admin, verificar que están editando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== r.grado) {
+    alert('Solo puede editar reuniones en su grado asignado');
+    return;
+  }
+  
+  document.getElementById('tituloReunion').value = r.titulo;
+  document.getElementById('fechaReunion').value = r.fecha || '';
+  document.getElementById('horaReunion').value = r.hora || '';
+  document.getElementById('gradoReunion').value = r.grado || '';
+  document.getElementById('observacionesReunion').value = r.observaciones || '';
+  editIndex.reunion = i;
+  abrirModulo('reuniones');
+  cargarPadresCheck(r.presentes || []);
+}
+
+function eliminarReunion(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const reunion = reuniones[i];
+  
+  // Para usuarios no admin, verificar que están eliminando en su grado
+  if (currentUser.tipo !== 'admin' && currentUser.grado !== reunion.grado) {
+    alert('Solo puede eliminar reuniones en su grado asignado');
+    return;
+  }
+  
+  if(confirm(`¿Está seguro de eliminar la reunión: ${reunion.titulo}?`)){
+    reuniones.splice(i,1);
+    localStorage.setItem('reuniones', JSON.stringify(reuniones));
+    mostrarReuniones();
+    registrarBitacora('accion', 'Reuniones', `Eliminó reunión: ${reunion.titulo}`);
+    
+    // Guardar en GitHub después de eliminar reunión
+    guardarEnGitHub();
+  }
+}
+document.getElementById('buscarReunion').addEventListener('input', mostrarReuniones);
+
+/* -------------------------
+  PAGOS (FILTRADO POR GRADO)
+------------------------- */
+function cargarAlumnosPago(){
+  const sel = document.getElementById('alumnoPago');
+  sel.innerHTML = '<option value="">Seleccionar alumno</option>';
+  
+  // Filtrar alumnos por grado del usuario (si no es admin)
+  let alumnosFiltrados = alumnos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    alumnosFiltrados = alumnos.filter(a => a.grado === currentUser.grado);
+  }
+  
+  alumnosFiltrados.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.nombre;
+    opt.textContent = `${a.nombre} (${a.grado})`;
+    sel.appendChild(opt);
+  });
+}
+
+function guardarPago(btn){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const alumno = document.getElementById('alumnoPago').value;
+  const monto = document.getElementById('montoPago').value.trim();
+  const fecha = document.getElementById('fechaPago').value;
+  const concepto = document.getElementById('conceptoPago').value.trim();
+  const mes = document.getElementById('mesPago').value;
+
+  if(!alumno || !monto){ alert('Seleccionar alumno y monto'); return; }
+
+  // Para usuarios no admin, verificar que el alumno pertenece a su grado
+  if (currentUser.tipo !== 'admin') {
+    const alumnoSeleccionado = alumnos.find(a => a.nombre === alumno);
+    if (!alumnoSeleccionado || alumnoSeleccionado.grado !== currentUser.grado) {
+      alert('Solo puede registrar pagos para alumnos en su grado asignado');
+      return;
+    }
+  }
+
+  if(editIndex.pago !== null){
+    // Edición
+    const pagoAnterior = pagos[editIndex.pago].alumno;
+    pagos[editIndex.pago] = { 
+      ...pagos[editIndex.pago],
+      alumno, 
+      monto, 
+      fecha, 
+      concepto,
+      mes 
+    };
+    editIndex.pago = null;
+    registrarBitacora('accion', 'Pagos', `Editó pago de: ${pagoAnterior} -> ${alumno}, monto: ${monto}`);
+  } else {
+    // Nuevo
+    pagos.push({ 
+      alumno, 
+      monto, 
+      fecha, 
+      concepto,
+      mes,
+      fechaCreacion: new Date().toLocaleString('es-ES')
+    });
+    registrarBitacora('accion', 'Pagos', `Registró nuevo pago de: ${alumno}, monto: ${monto}`);
+  }
+
+  localStorage.setItem('pagos', JSON.stringify(pagos));
+  tempSaved(btn);
+  limpiarPago();
+  mostrarPagos();
+  
+  // Guardar en GitHub después de modificar pagos
+  guardarEnGitHub();
+}
+
+function limpiarPago(){
+  document.getElementById('alumnoPago').value='';
+  document.getElementById('montoPago').value='';
+  document.getElementById('fechaPago').value='';
+  document.getElementById('conceptoPago').value='';
+  document.getElementById('mesPago').value='';
+}
+
+function mostrarPagos(){
+  const cont = document.getElementById('listaPagos');
+  cont.innerHTML = '';
+  
+  // Filtrar pagos por grado del usuario (si no es admin)
+  let pagosFiltrados = pagos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    // Obtener nombres de alumnos del grado del usuario
+    const alumnosDelGrado = alumnos.filter(a => a.grado === currentUser.grado).map(a => a.nombre);
+    pagosFiltrados = pagos.filter(p => alumnosDelGrado.includes(p.alumno));
+  }
+  
+  const q = document.getElementById('buscarPago').value.trim().toLowerCase();
+  const lista = pagosFiltrados.filter(p => !q || p.alumno.toLowerCase().includes(q));
+  
+  if(lista.length === 0){ 
+    cont.innerHTML = '<div class="item">No hay pagos registrados.' + 
+      (currentUser.tipo !== 'admin' && currentUser.grado ? 
+        ' en el grado ' + currentUser.grado : '') + '</div>'; 
+    return; 
+  }
+  
+  lista.forEach((p,i) => {
+    const idx = pagos.indexOf(p);
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${escapeHtml(p.alumno)}</strong> - ${escapeHtml(p.monto)} Bs
+      <div class="detalles">
+        <p><b>Fecha:</b> ${escapeHtml(p.fecha||'-')}</p>
+        <p><b>Mes:</b> ${escapeHtml(p.mes||'-')}</p>
+        <p><b>Concepto:</b> ${escapeHtml(p.concepto||'-')}</p>
+        ${p.fechaCreacion ? `<p><b>Fecha registro:</b> ${escapeHtml(p.fechaCreacion)}</p>` : ''}
+        <div class="acciones">
+          <button class="edit admin-only operador-only" onclick="editarPago(${idx})">Editar</button>
+          <button class="del admin-only operador-only" onclick="eliminarPago(${idx})">Eliminar</button>
+        </div>
+      </div>`;
+    div.onclick = (e) => { 
+      if(e.target.tagName.toLowerCase()==='button') return; 
+      const det = div.querySelector('.detalles'); 
+      det.style.display = det.style.display === 'block' ? 'none' : 'block'; 
+    };
+    cont.appendChild(div);
+  });
+  
+  // Aplicar permisos de visualización
+  configurarPermisosPorRol(currentUser.tipo);
+}
+
+function editarPago(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const p = pagos[i];
+  
+  // Para usuarios no admin, verificar que el pago pertenece a su grado
+  if (currentUser.tipo !== 'admin') {
+    const alumnoDelPago = alumnos.find(a => a.nombre === p.alumno);
+    if (!alumnoDelPago || alumnoDelPago.grado !== currentUser.grado) {
+      alert('Solo puede editar pagos de alumnos en su grado asignado');
+      return;
+    }
+  }
+  
+  document.getElementById('alumnoPago').value = p.alumno;
+  document.getElementById('montoPago').value = p.monto;
+  document.getElementById('fechaPago').value = p.fecha || '';
+  document.getElementById('conceptoPago').value = p.concepto || '';
+  document.getElementById('mesPago').value = p.mes || '';
+  editIndex.pago = i;
+  abrirModulo('pagos');
+}
+
+function eliminarPago(i){
+  // Verificar permisos
+  if (currentUser.tipo !== 'admin' && currentUser.tipo !== 'operador') {
+    alert('No tiene permisos para realizar esta acción');
+    return;
+  }
+
+  const pago = pagos[i];
+  
+  // Para usuarios no admin, verificar que el pago pertenece a su grado
+  if (currentUser.tipo !== 'admin') {
+    const alumnoDelPago = alumnos.find(a => a.nombre === pago.alumno);
+    if (!alumnoDelPago || alumnoDelPago.grado !== currentUser.grado) {
+      alert('Solo puede eliminar pagos de alumnos en su grado asignado');
+      return;
+    }
+  }
+  
+  if(confirm(`¿Está seguro de eliminar el pago de: ${pago.alumno} por ${pago.monto}?`)){
+    pagos.splice(i,1);
+    localStorage.setItem('pagos', JSON.stringify(pagos));
+    mostrarPagos();
+    registrarBitacora('accion', 'Pagos', `Eliminó pago de: ${pago.alumno}, monto: ${pago.monto}`);
+    
+    // Guardar en GitHub después de eliminar pago
+    guardarEnGitHub();
+  }
+}
+document.getElementById('buscarPago').addEventListener('input', mostrarPagos);
+
+/* -------------------------
+  FUNCIONES DE EXPORTACIÓN A EXCEL
+------------------------- */
+function exportarExcel(datos, nombreArchivo, columnas, nombresColumnas) {
+  if (datos.length === 0) {
+    alert(`No hay datos para exportar en ${nombreArchivo}`);
+    return;
+  }
+
+  // Crear contenido HTML para Excel
+  let html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="UTF-8">
+      <title>${nombreArchivo}</title>
+      <!--[if gte mso 9]>
+      <xml>
+        <x:ExcelWorkbook>
+          <x:ExcelWorksheets>
+            <x:ExcelWorksheet>
+              <x:Name>${nombreArchivo}</x:Name>
+              <x:WorksheetOptions>
+                <x:DisplayGridlines/>
+              </x:WorksheetOptions>
+            </x:ExcelWorksheet>
+          </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+      </xml>
+      <![endif]-->
+      <style>
+        table {
+          border-collapse: collapse;
+          width: 100%;
+        }
+        th {
+          background-color: #4CAF50;
+          color: white;
+          font-weight: bold;
+          padding: 8px;
+          text-align: left;
+          border: 1px solid #ddd;
+        }
+        td {
+          padding: 8px;
+          border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+      </style>
+    </head>
+    <body>
+      <table>
+        <thead>
+          <tr>
+  `;
+
+  // Agregar encabezados
+  nombresColumnas.forEach(col => {
+    html += `<th>${col}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  // Agregar datos
+  datos.forEach(item => {
+    html += '<tr>';
+    columnas.forEach(col => {
+      let valor = item[col] || '';
+      // Si es un array, convertirlo a string
+      if (Array.isArray(valor)) {
+        valor = valor.join(', ');
+      }
+      html += `<td>${escapeHtml(valor)}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += `</tbody></table></body></html>`;
+
+  // Crear y descargar archivo
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${nombreArchivo}_${new Date().toISOString().split('T')[0]}.xls`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // Registrar en bitácora
+  registrarBitacora('accion', 'Exportación', `Exportó ${nombreArchivo} a Excel`);
+}
+
+function exportarAlumnosExcel() {
+  // Filtrar alumnos por grado del usuario (si no es admin)
+  let alumnosFiltrados = alumnos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    alumnosFiltrados = alumnos.filter(a => a.grado === currentUser.grado);
+  }
+  
+  const columnas = ['nombre', 'grado', 'comentarios', 'fechaCreacion'];
+  const nombresColumnas = ['Nombre', 'Grado', 'Comentarios', 'Fecha Registro'];
+  exportarExcel(alumnosFiltrados, 'alumnos', columnas, nombresColumnas);
+}
+
+function exportarPadresExcel() {
+  // Filtrar padres por grado del usuario (si no es admin)
+  let padresFiltrados = padres;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    padresFiltrados = padres.filter(p => p.grado === currentUser.grado);
+  }
+  
+  const columnas = ['nombre', 'telefono', 'email', 'grado', 'fechaCreacion'];
+  const nombresColumnas = ['Nombre', 'Teléfono', 'Email', 'Grado', 'Fecha Registro'];
+  exportarExcel(padresFiltrados, 'padres', columnas, nombresColumnas);
+}
+
+function exportarGruposExcel() {
+  // Filtrar grupos por grado del usuario (si no es admin)
+  let gruposFiltrados = grupos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    gruposFiltrados = grupos.filter(g => g.grado === currentUser.grado);
+  }
+  
+  const columnas = ['nombre', 'grado', 'descripcion', 'fechaCreacion'];
+  const nombresColumnas = ['Nombre', 'Grado', 'Descripción', 'Fecha Registro'];
+  exportarExcel(gruposFiltrados, 'grupos', columnas, nombresColumnas);
+}
+
+function exportarReunionesExcel() {
+  // Filtrar reuniones por grado del usuario (si no es admin)
+  let reunionesFiltradas = reuniones;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    reunionesFiltradas = reuniones.filter(r => r.grado === currentUser.grado);
+  }
+  
+  const columnas = ['titulo', 'fecha', 'hora', 'grado', 'observaciones', 'presentes', 'ausentes', 'fechaCreacion'];
+  const nombresColumnas = ['Título', 'Fecha', 'Hora', 'Grado', 'Observaciones', 'Presentes', 'Ausentes', 'Fecha Registro'];
+  exportarExcel(reunionesFiltradas, 'reuniones', columnas, nombresColumnas);
+}
+
+function exportarPagosExcel() {
+  // Filtrar pagos por grado del usuario (si no es admin)
+  let pagosFiltrados = pagos;
+  if (currentUser.tipo !== 'admin' && currentUser.grado) {
+    // Obtener nombres de alumnos del grado del usuario
+    const alumnosDelGrado = alumnos.filter(a => a.grado === currentUser.grado).map(a => a.nombre);
+    pagosFiltrados = pagos.filter(p => alumnosDelGrado.includes(p.alumno));
+  }
+  
+  const columnas = ['alumno', 'monto', 'fecha', 'mes', 'concepto', 'fechaCreacion'];
+  const nombresColumnas = ['Alumno', 'Monto (Bs)', 'Fecha', 'Mes', 'Concepto', 'Fecha Registro'];
+  exportarExcel(pagosFiltrados, 'pagos', columnas, nombresColumnas);
+}
+
+function exportarDatos() {
+  if (confirm('¿Exportar todos los datos a archivos Excel? Se descargarán 5 archivos.')) {
+    exportarAlumnosExcel();
+    setTimeout(() => exportarPadresExcel(), 300);
+    setTimeout(() => exportarGruposExcel(), 600);
+    setTimeout(() => exportarReunionesExcel(), 900);
+    setTimeout(() => exportarPagosExcel(), 1200);
+  }
+}
+
+/* -------------------------
+  UTILIDADES
+------------------------- */
+function escapeHtml(str){
+  if(!str && str !== 0) return '';
+  return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+}
+function slugify(s){ return (s||'').toLowerCase().replace(/\s+/g,'_').replace(/[^\w\-]+/g,''); }
+
+/* Inicializar pantallas con datos guardados */
+function initApp() {
+  // Inicializar usuarios si no existen
+  inicializarUsuarios();
+  
+  // Cargar datos básicos
+  cargarAlumnosPago();
+  cargarPadresCheck();
+  
+  mostrarAlumnos();
+  mostrarPadres();
+  mostrarGrupos();
+  mostrarReuniones();
+  mostrarPagos();
+  mostrarUsuarios();
+}
+
+// Inicializar la aplicación cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar usuarios automáticamente al cargar la página
+  inicializarUsuarios();
+  console.log("Sistema escolar inicializado");
+});
+</script>
+</body>
+</html>
