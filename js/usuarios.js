@@ -165,12 +165,13 @@ function mostrarUsuarios() {
     
     // Mostrar estado activo/inactivo y fecha de solicitud si existe
     const estado = u.activo === false ? '❌ INACTIVO' : '✅ ACTIVO';
-    const fechaInfo = u.fechaSolicitud ? `<br>Solicitud: ${u.fechaSolicitud}` : '';
+    const fechaInfo = u.fechaSolicitud ? `<br>📅 Solicitud: ${u.fechaSolicitud}` : 
+                     u.fechaCreacion ? `<br>📅 Creado: ${u.fechaCreacion}` : '';
     
     div.innerHTML = `
       <b>${u.user}</b> (${u.rol}) - ${estado}${fechaInfo}<br>
-      Grado: ${u.grado}<br>
-      Teléfono: ${u.telefono || '—'}
+      🎓 Grado: ${u.grado}<br>
+      📞 Teléfono: ${u.telefono || '—'}
     `;
     
     // Solo superusuario y admin pueden editar/eliminar usuarios (con restricciones)
@@ -196,11 +197,12 @@ function mostrarUsuarios() {
         acciones.appendChild(btnEdit);
       }
       
-      // Botón para activar/desactivar (solo superusuario)
+      // 🔥 BOTÓN PARA ACTIVAR/DESACTIVAR (SOLO SUPERUSUARIO)
       if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
         const btnEstado = document.createElement('button');
         btnEstado.textContent = u.activo === false ? 'Activar' : 'Desactivar';
         btnEstado.className = u.activo === false ? 'btn-edit' : 'btn-delete';
+        btnEstado.style.marginLeft = '5px';
         btnEstado.onclick = () => cambiarEstadoUsuario(i);
         acciones.appendChild(btnEstado);
       }
@@ -224,6 +226,7 @@ function mostrarUsuarios() {
         const btnDelete = document.createElement('button');
         btnDelete.textContent = 'Eliminar';
         btnDelete.className = 'btn-delete';
+        btnDelete.style.marginLeft = '5px';
         btnDelete.onclick = () => eliminarUsuario(i);
         acciones.appendChild(btnDelete);
       }
@@ -235,4 +238,213 @@ function mostrarUsuarios() {
   });
 }
 
-// ... (el resto de las funciones de usuarios.js se mantienen igual: editarUsuario, eliminarUsuario, cambiarEstadoUsuario, cancelarEdicionUsuario, cargarTodosLosGrados)
+function editarUsuario(index) {
+  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
+    mostrarNotificacion('❌ No tienes permisos para editar usuarios');
+    return;
+  }
+  
+  const u = usuarios[index];
+  
+  // Validaciones de seguridad para administradores
+  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
+    if (ROLE_ALIASES.SUPER.includes(u.rol)) {
+      mostrarNotificacion('❌ No tienes permisos para editar superusuarios');
+      return;
+    }
+    if (u.grado !== usuarioActivo.grado) {
+      mostrarNotificacion('❌ Solo puedes editar usuarios de tu mismo grado');
+      return;
+    }
+  }
+  
+  document.getElementById('formularioUsuario').style.display = 'block';
+  document.getElementById('botonNuevoUsuarioContainer').style.display = 'none';
+  
+  document.getElementById('nombreUsuario').value = u.user;
+  document.getElementById('passUsuario').value = u.pass;
+  document.getElementById('telefonoUsuario').value = u.telefono || '591';
+  
+  // Cargar opciones de rol según el usuario actual
+  const rolSelect = document.getElementById('rolUsuario');
+  
+  if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
+    rolSelect.innerHTML = `
+      <option value="superusuario" ${u.rol === 'superusuario' ? 'selected' : ''}>Superusuario</option>
+      <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+      <option value="operador" ${u.rol === 'operador' ? 'selected' : ''}>Operador</option>
+      <option value="visitante" ${u.rol === 'visitante' ? 'selected' : ''}>Visitante</option>
+    `;
+  } else if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
+    rolSelect.innerHTML = `
+      <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+      <option value="operador" ${u.rol === 'operador' ? 'selected' : ''}>Operador</option>
+      <option value="visitante" ${u.rol === 'visitante' ? 'selected' : ''}>Visitante</option>
+    `;
+  }
+  
+  // Cargar opciones de grado
+  const gradoSelect = document.getElementById('gradoUsuario');
+  gradoSelect.innerHTML = '<option value="">Seleccionar grado</option>';
+  
+  if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
+    const optTodos = document.createElement('option');
+    optTodos.value = 'Todos';
+    optTodos.textContent = 'Todos';
+    optTodos.selected = u.grado === 'Todos';
+    gradoSelect.appendChild(optTodos);
+    
+    cargarTodosLosGrados(gradoSelect, u.grado);
+    gradoSelect.disabled = false;
+  } else if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
+    // Para administradores, solo mostrar su propio grado
+    const opt = document.createElement('option');
+    opt.value = usuarioActivo.grado;
+    opt.textContent = usuarioActivo.grado;
+    opt.selected = true;
+    gradoSelect.appendChild(opt);
+    
+    // Deshabilitar el select para administradores
+    gradoSelect.disabled = true;
+  }
+  
+  editandoIndex = index;
+  moduloEditando = 'usuarios';
+  document.getElementById('btnGuardarUsuario').textContent = 'Actualizar';
+}
+
+function eliminarUsuario(index) {
+  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
+    mostrarNotificacion('❌ No tienes permisos para eliminar usuarios');
+    return;
+  }
+  
+  const u = usuarios[index];
+  
+  // No permitir eliminar al propio usuario
+  if (u.user === usuarioActivo.user) {
+    mostrarNotificacion('❌ No puedes eliminar tu propio usuario');
+    return;
+  }
+  
+  // Validaciones de seguridad para administradores
+  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
+    if (ROLE_ALIASES.SUPER.includes(u.rol)) {
+      mostrarNotificacion('❌ No tienes permisos para eliminar superusuarios');
+      return;
+    }
+    if (u.grado !== usuarioActivo.grado) {
+      mostrarNotificacion('❌ Solo puedes eliminar usuarios de tu mismo grado');
+      return;
+    }
+  }
+  
+  if (confirm(`¿Eliminar usuario ${u.user}?`)) {
+    usuarios.splice(index, 1);
+    registrarAccion(`Eliminó usuario: ${u.user}`);
+    guardarDatos();
+    mostrarUsuarios();
+    mostrarNotificacion('✅ Usuario eliminado');
+  }
+}
+
+// 🔥 FUNCIÓN PARA CAMBIAR ESTADO DE USUARIO (ACTIVAR/DESACTIVAR)
+function cambiarEstadoUsuario(index) {
+  if (!usuarioActivo || !ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
+    mostrarNotificacion('❌ Solo el superusuario puede cambiar estados de usuario');
+    return;
+  }
+  
+  const u = usuarios[index];
+  
+  // No permitir desactivar al propio usuario
+  if (u.user === usuarioActivo.user && u.activo !== false) {
+    mostrarNotificacion('❌ No puedes desactivar tu propio usuario');
+    return;
+  }
+  
+  const nuevoEstado = u.activo === false;
+  const accion = nuevoEstado ? 'activar' : 'desactivar';
+  
+  if (confirm(`¿${accion.toUpperCase()} usuario ${u.user}?`)) {
+    usuarios[index].activo = nuevoEstado;
+    registrarAccion(`${nuevoEstado ? 'Activó' : 'Desactivó'} usuario: ${u.user}`);
+    guardarDatos();
+    mostrarUsuarios();
+    mostrarNotificacion(`✅ Usuario ${nuevoEstado ? 'activado' : 'desactivado'} correctamente`);
+    
+    // Enviar notificación a Telegram cuando se activa un usuario
+    if (nuevoEstado && typeof enviarNotificacionTelegram === 'function') {
+      enviarNotificacionTelegram(`✅ USUARIO ACTIVADO: ${u.user}`, u.grado);
+    }
+  }
+}
+
+function cancelarEdicionUsuario() {
+  document.getElementById('formularioUsuario').style.display = 'none';
+  document.getElementById('botonNuevoUsuarioContainer').style.display = 
+    (usuarioActivo && (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) ? 'block' : 'none';
+  
+  // Re-habilitar select de grado si estaba deshabilitado
+  const gradoSelect = document.getElementById('gradoUsuario');
+  if (gradoSelect) gradoSelect.disabled = false;
+  
+  editandoIndex = -1;
+  moduloEditando = '';
+}
+
+// Función auxiliar para cargar todos los grados
+function cargarTodosLosGrados(selectElement, gradoSeleccionado = '') {
+  // Agregar grados de PRIMARIA
+  const optGroupPrimaria = document.createElement('optgroup');
+  optGroupPrimaria.label = 'PRIMARIA';
+  selectElement.appendChild(optGroupPrimaria);
+  
+  const gradosPrimaria = [
+    '1° A', '1° B', '2° A', '2° B', '3° A', '3° B', 
+    '4° A', '4° B', '5° A', '5° B', '6° A', '6° B'
+  ];
+  
+  gradosPrimaria.forEach(grado => {
+    const opt = document.createElement('option');
+    opt.value = grado;
+    opt.textContent = grado;
+    opt.selected = grado === gradoSeleccionado;
+    optGroupPrimaria.appendChild(opt);
+  });
+  
+  // Agregar grados de SECUNDARIA
+  const optGroupSecundaria = document.createElement('optgroup');
+  optGroupSecundaria.label = 'SECUNDARIA';
+  selectElement.appendChild(optGroupSecundaria);
+  
+  const gradosSecundaria = [
+    '1° A Sec.', '1° B Sec.', '2° A Sec.', '2° B Sec.', 
+    '3° A Sec.', '3° B Sec.', '4° A Sec.', '4° B Sec.'
+  ];
+  
+  gradosSecundaria.forEach(grado => {
+    const opt = document.createElement('option');
+    opt.value = grado;
+    opt.textContent = grado;
+    opt.selected = grado === gradoSeleccionado;
+    optGroupSecundaria.appendChild(opt);
+  });
+  
+  // Agregar grados de PROMOCIONES
+  const optGroupPromo = document.createElement('optgroup');
+  optGroupPromo.label = 'PROMOCIONES';
+  selectElement.appendChild(optGroupPromo);
+  
+  const gradosPromo = [
+    'Pre Promo A', 'Pre Promo B', 'Promo A', 'Promo B'
+  ];
+  
+  gradosPromo.forEach(grado => {
+    const opt = document.createElement('option');
+    opt.value = grado;
+    opt.textContent = grado;
+    opt.selected = grado === gradoSeleccionado;
+    optGroupPromo.appendChild(opt);
+  });
+}
