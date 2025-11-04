@@ -1,0 +1,42 @@
+<section class="modulo active">
+  <h2>Pagos</h2>
+  <div class="formulario">
+    <select id="padrePago"><option value="">Seleccionar padre</option></select>
+    <input id="montoPago" type="number" placeholder="Monto (Bs)">
+    <input id="fechaPago" type="date">
+    <input id="conceptoPago" type="text" placeholder="Concepto / detalle">
+    <div style="text-align:center;">
+      <button class="form-btn" id="btnGuardarPago" onclick="guardarPago()">Guardar</button>
+      <button class="form-btn" onclick="mostrarPagos()">Actualizar</button>
+    </div>
+  </div>
+
+  <input id="buscarPago" class="search" type="text" placeholder="Buscar pago (por padre)">
+  <div id="listaPagos" class="lista"></div>
+  <div style="text-align:center">
+    <button class="btn-exportar" onclick="exportarPagos()">Exportar Pagos</button>
+    <button class="volver" onclick="volverMenu()">Volver</button>
+  </div>
+</section>
+
+<script>
+function inicializarPagos() {
+  mostrarPagos();
+  cargarPadresPagoSelect();
+  
+  document.getElementById('buscarPago').addEventListener('input', mostrarPagos);
+}
+
+function cargarPadresPagoSelect() {
+  const select = document.getElementById('padrePago');
+  select.innerHTML = '<option value="">Seleccionar padre</option>';
+  
+  padres.filter(p => perteneceAGrado(p.grupo))
+    .forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.nombre;
+      opt.textContent = p.nombre;
+      select.appendChild(opt);
+    });
+}
+</script>

@@ -1,0 +1,42 @@
+<section class="modulo active">
+  <h2>Gestión de usuarios</h2>
+  <div class="formulario" id="formularioUsuario" style="display:none;">
+    <input id="nombreUsuario" type="text" placeholder="Usuario">
+    <input id="passUsuario" type="password" placeholder="Contraseña">
+    <input id="telefonoUsuario" type="text" placeholder="Teléfono (ej: 591XXXXXXXX)" value="591">
+    <select id="rolUsuario">
+      <!-- Las opciones se cargarán dinámicamente según el rol del usuario -->
+    </select>
+    <select id="gradoUsuario">
+      <option value="">Seleccionar grado</option>
+    </select>
+    <div style="text-align:center;">
+      <button class="form-btn" id="btnGuardarUsuario" onclick="guardarUsuario()">Guardar</button>
+      <button class="form-btn" onclick="cancelarEdicionUsuario()">Cancelar</button>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-bottom: 15px;" id="botonNuevoUsuarioContainer">
+    <button class="form-btn" onclick="nuevoUsuario()" id="btnNuevoUsuario">Nuevo Usuario</button>
+  </div>
+
+  <input id="buscarUsuario" class="search" type="text" placeholder="Buscar usuario">
+  <div id="listaUsuarios" class="lista"></div>
+  <div style="text-align:center">
+    <button class="volver" onclick="volverMenu()">Volver</button>
+  </div>
+</section>
+
+<script>
+function inicializarUsuarios() {
+  mostrarUsuarios();
+  
+  // Configurar visibilidad según permisos
+  const botonNuevoContainer = document.getElementById('botonNuevoUsuarioContainer');
+  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
+    botonNuevoContainer.style.display = 'none';
+  }
+  
+  document.getElementById('buscarUsuario').addEventListener('input', mostrarUsuarios);
+}
+</script>

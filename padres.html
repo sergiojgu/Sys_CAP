@@ -1,0 +1,23 @@
+<!-- ===== PADRES ===== -->
+<section id="padres" class="modulo">
+  <h2>Padres / Tutores</h2>
+  <div class="formulario">
+    <input id="nombrePadre" type="text" placeholder="Nombre completo">
+    <input id="telefonoPadre" type="text" placeholder="Teléfono">
+    <select id="grupoPadre">
+      <option value="">Seleccionar grupo</option>
+    </select>
+
+    <div style="text-align:center;">
+      <button class="form-btn" id="btnGuardarPadre" onclick="guardarPadre()">Guardar</button>
+      <button class="form-btn" onclick="mostrarPadres()">Actualizar</button>
+    </div>
+  </div>
+
+  <input id="buscarPadre" class="search" type="text" placeholder="Buscar padre">
+  <div id="listaPadres" class="lista"></div>
+  <div style="text-align:center">
+    <button class="btn-exportar" onclick="exportarPadres()">Exportar Padres</button>
+    <button class="volver" onclick="volverMenu()">Volver</button>
+  </div>
+</section>

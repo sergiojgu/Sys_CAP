@@ -1,0 +1,28 @@
+<!-- ===== REUNIONES ===== -->
+<section id="reuniones" class="modulo">
+  <h2>Reuniones</h2>
+  <div class="formulario">
+    <input id="tituloReunion" type="text" placeholder="Título de la reunión">
+    <input id="fechaReunion" type="date">
+    <input id="horaReunion" type="time">
+    <textarea id="observacionesReunion" placeholder="Observaciones"></textarea>
+    <select id="grupoReunion">
+      <option value="">Seleccionar grupo</option>
+    </select>
+    
+    <!-- SOLO UNA VEZ "Seleccionar padres presentes" -->
+    <div id="listaPadresCheck"></div>
+
+    <div style="text-align:center;">
+      <button class="form-btn" id="btnGuardarReunion" onclick="guardarReunion()">Guardar</button>
+      <button class="form-btn" onclick="mostrarReuniones()">Actualizar</button>
+    </div>
+  </div>
+
+  <input id="buscarReunion" class="search" type="text" placeholder="Buscar reunión">
+  <div id="listaReuniones" class="lista"></div>
+  <div style="text-align:center">
+    <button class="btn-exportar" onclick="exportarReuniones()">Exportar Reuniones</button>
+    <button class="volver" onclick="volverMenu()">Volver</button>
+  </div>
+</section>

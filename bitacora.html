@@ -1,0 +1,27 @@
+<section class="modulo active">
+  <h2>Bitácora del sistema</h2>
+  <div class="formulario">
+    <div style="text-align:center; margin-bottom:15px;">
+      <button class="btn-clear" onclick="limpiarBitacora()" id="btnLimpiarBitacora">Limpiar Bitácora</button>
+    </div>
+  </div>
+
+  <div id="logContainer" style="background:#fff; padding:12px; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.1);">
+    <div id="bitacoraLista" style="max-height:400px; overflow:auto; font-family:monospace; white-space:pre-wrap;"></div>
+  </div>
+  <div style="text-align:center; margin-top:15px;">
+    <button class="volver" onclick="volverMenu()">Volver</button>
+  </div>
+</section>
+
+<script>
+function inicializarBitacora() {
+  mostrarBitacora();
+  
+  // Configurar visibilidad del botón de limpiar según permisos
+  const btnLimpiar = document.getElementById('btnLimpiarBitacora');
+  if (!usuarioActivo || (!ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && !ROLE_ALIASES.SUPER.includes(usuarioActivo.rol))) {
+    btnLimpiar.style.display = 'none';
+  }
+}
+</script>

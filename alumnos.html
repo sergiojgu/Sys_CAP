@@ -1,0 +1,19 @@
+<h2>Alumnos</h2>
+<div class="formulario">
+  <input id="nombreAlumno" type="text" placeholder="Nombre completo">
+  <select id="padreAlumno"><option value="">Seleccionar padre/tutor</option></select>
+  
+  <textarea id="comentariosAlumno" placeholder="Comentarios"></textarea>
+
+  <div style="text-align:center;">
+    <button class="form-btn" id="btnGuardarAlumno" onclick="guardarAlumno()">Guardar</button>
+    <button class="form-btn" onclick="mostrarAlumnos()">Actualizar</button>
+  </div>
+</div>
+
+<input id="buscarAlumno" class="search" type="text" placeholder="Buscar alumno">
+<div id="listaAlumnos" class="lista"></div>
+<div style="text-align:center">
+  <button class="btn-exportar" onclick="exportarAlumnos()">Exportar Alumnos</button>
+  <button class="volver" onclick="volverMenu()">Volver</button>
+</div>

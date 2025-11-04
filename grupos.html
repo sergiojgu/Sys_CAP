@@ -1,0 +1,19 @@
+<h2>Grupos</h2>
+<div class="formulario">
+  <input id="nombreGrupo" type="text" placeholder="Nombre del grupo (ej: 3A)">
+  <input id="descripcionGrupo" type="text" placeholder="Descripción">
+  <input id="horarioGrupo" type="text" placeholder="Horario (ej: Lunes 8:00-10:00)">
+  <textarea id="comentariosGrupo" placeholder="Comentarios"></textarea>
+
+  <div style="text-align:center;">
+    <button class="form-btn" id="btnGuardarGrupo" onclick="guardarGrupo()">Guardar</button>
+    <button class="form-btn" onclick="mostrarGrupos()">Actualizar</button>
+  </div>
+</div>
+
+<input id="buscarGrupo" class="search" type="text" placeholder="Buscar grupo">
+<div id="listaGrupos" class="lista"></div>
+<div style="text-align:center">
+  <button class="btn-exportar" onclick="exportarGrupos()">Exportar Grupos</button>
+  <button class="volver" onclick="volverMenu()">Volver</button>
+</div>
