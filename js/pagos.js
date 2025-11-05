@@ -1,238 +1,173 @@
-// ========== USUARIOS ==========
-function nuevoUsuario() {
-  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
-    mostrarNotificacion('❌ No tienes permisos para crear usuarios');
-    return;
-  }
-  
-  document.getElementById('formularioUsuario').style.display = 'block';
-  document.getElementById('botonNuevoUsuarioContainer').style.display = 'none';
-  
-  // Limpiar formulario
-  document.getElementById('nombreUsuario').value = '';
-  document.getElementById('passUsuario').value = '';
-  document.getElementById('telefonoUsuario').value = '591';
-  document.getElementById('rolUsuario').innerHTML = '';
-  document.getElementById('gradoUsuario').innerHTML = '<option value="">Seleccionar grado</option>';
-  
-  // Cargar opciones de rol según el usuario actual
-  const rolSelect = document.getElementById('rolUsuario');
-  
-  if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
-    rolSelect.innerHTML = `
-      <option value="superusuario">Superusuario</option>
-      <option value="admin">Administrador</option>
-      <option value="operador">Operador</option>
-      <option value="visitante">Visitante</option>
-    `;
-  } else if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    rolSelect.innerHTML = `
-      <option value="admin">Administrador</option>
-      <option value="operador">Operador</option>
-      <option value="visitante">Visitante</option>
-    `;
-  }
-  
-  // Cargar opciones de grado
-  const gradoSelect = document.getElementById('gradoUsuario');
-  gradoSelect.innerHTML = '<option value="">Seleccionar grado</option>';
-  
-  // Si es superusuario, agregar opción "Todos" y todos los grados
-  if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
-    const optTodos = document.createElement('option');
-    optTodos.value = 'Todos';
-    optTodos.textContent = 'Todos';
-    gradoSelect.appendChild(optTodos);
+// ========== PAGOS ==========
+function mostrarPagos() {
+    const cont = document.getElementById('listaPagos');
+    if (!cont) return;
     
-    // Agregar todos los grados disponibles
-    cargarTodosLosGrados(gradoSelect);
-  } else if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    // Para administradores, solo mostrar su propio grado
-    const opt = document.createElement('option');
-    opt.value = usuarioActivo.grado;
-    opt.textContent = usuarioActivo.grado;
-    opt.selected = true;
-    gradoSelect.appendChild(opt);
+    const q = document.getElementById('buscarPago')?.value?.toLowerCase() || '';
+    cont.innerHTML = '';
     
-    // Deshabilitar el select para administradores (solo pueden crear usuarios de su grado)
-    gradoSelect.disabled = true;
-  }
-  
-  editandoIndex = -1;
-  moduloEditando = 'usuarios';
-  document.getElementById('btnGuardarUsuario').textContent = 'Guardar';
-}
-
-function guardarUsuario() {
-  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
-    mostrarNotificacion('❌ No tienes permisos para gestionar usuarios');
-    return;
-  }
-  
-  const nombre = document.getElementById('nombreUsuario').value.trim();
-  const pass = document.getElementById('passUsuario').value;
-  const telefono = document.getElementById('telefonoUsuario').value.trim();
-  const rol = document.getElementById('rolUsuario').value;
-  let grado = document.getElementById('gradoUsuario').value;
-  
-  // Para administradores, el grado siempre será el mismo que el del administrador
-  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    grado = usuarioActivo.grado;
-  }
-  
-  if (!nombre || !pass || !rol || !grado) {
-    return mostrarNotificacion('❌ Completar todos los campos obligatorios');
-  }
-  
-  // Validar que administradores no creen superusuarios
-  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && ROLE_ALIASES.SUPER.includes(rol)) {
-    return mostrarNotificacion('❌ No tienes permisos para crear superusuarios');
-  }
-  
-  if (editandoIndex !== -1 && moduloEditando === 'usuarios') {
-    // Validaciones para edición
-    const usuarioEditado = usuarios[editandoIndex];
-    
-    // Administradores no pueden editar superusuarios
-    if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && ROLE_ALIASES.SUPER.includes(usuarioEditado.rol)) {
-      return mostrarNotificacion('❌ No tienes permisos para editar superusuarios');
-    }
-    
-    // Administradores solo pueden editar usuarios de su mismo grado
-    if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && usuarioEditado.grado !== usuarioActivo.grado) {
-      return mostrarNotificacion('❌ Solo puedes editar usuarios de tu mismo grado');
-    }
-    
-    usuarios[editandoIndex] = { 
-      ...usuarios[editandoIndex],
-      user: nombre, 
-      pass, 
-      rol, 
-      grado, 
-      telefono 
-    };
-    registrarAccion(`Editó usuario: ${nombre} (${rol})`);
-    mostrarNotificacion('✅ Usuario actualizado correctamente');
-  } else {
-    // Nuevo usuario
-    if (usuarios.some(u => u.user === nombre)) {
-      return mostrarNotificacion('❌ Ya existe un usuario con ese nombre');
-    }
-    
-    usuarios.push({ 
-      user: nombre, 
-      pass, 
-      rol, 
-      grado, 
-      telefono,
-      activo: true, // Usuarios creados aquí por admin/super están ACTIVOS
-      fechaCreacion: new Date().toLocaleString()
+    // Filtrar pagos según permisos del usuario
+    let pagosFiltrados = pagos.filter(p => {
+        const padre = padres.find(pa => pa.id === p.padreId);
+        return padre && padre.nombre.toLowerCase().includes(q) && perteneceAGrado(p.grupo);
     });
-    registrarAccion(`Nuevo usuario: ${nombre} (${rol})`);
-    mostrarNotificacion('✅ Usuario creado correctamente');
-  }
-  
-  guardarDatos();
-  mostrarUsuarios();
-  cancelarEdicionUsuario();
-}
-
-function mostrarUsuarios() {
-  const cont = document.getElementById('listaUsuarios');
-  if (!cont) return;
-  
-  const q = document.getElementById('buscarUsuario')?.value?.toLowerCase() || '';
-  cont.innerHTML = '';
-  
-  // Filtrar usuarios según permisos
-  let usuariosFiltrados = usuarios.filter(u => u.user.toLowerCase().includes(q));
-  
-  // Si es administrador, solo mostrar usuarios de su mismo grado
-  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    usuariosFiltrados = usuariosFiltrados.filter(u => 
-      u.grado === usuarioActivo.grado && !ROLE_ALIASES.SUPER.includes(u.rol)
-    );
-  }
-  
-  if (usuariosFiltrados.length === 0) {
-    cont.innerHTML = '<div class="item">No se encontraron usuarios</div>';
-    return;
-  }
-  
-  usuariosFiltrados.forEach((u, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
     
-    // Mostrar estado activo/inactivo y fecha de solicitud si existe
-    const estado = u.activo === false ? '❌ INACTIVO' : '✅ ACTIVO';
-    const fechaInfo = u.fechaSolicitud ? `<br>Solicitud: ${u.fechaSolicitud}` : '';
-    
-    div.innerHTML = `
-      <b>${u.user}</b> (${u.rol}) - ${estado}${fechaInfo}<br>
-      Grado: ${u.grado}<br>
-      Teléfono: ${u.telefono || '—'}
-    `;
-    
-    // Solo superusuario y admin pueden editar/eliminar usuarios (con restricciones)
-    if (usuarioActivo && (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
-      const acciones = document.createElement('div');
-      acciones.className = 'item-actions';
-      
-      // Verificar permisos para editar
-      let puedeEditar = true;
-      
-      // Administradores no pueden editar superusuarios ni usuarios de otros grados
-      if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-        if (ROLE_ALIASES.SUPER.includes(u.rol) || u.grado !== usuarioActivo.grado) {
-          puedeEditar = false;
-        }
-      }
-      
-      if (puedeEditar) {
-        const btnEdit = document.createElement('button');
-        btnEdit.textContent = 'Editar';
-        btnEdit.className = 'btn-edit';
-        btnEdit.onclick = () => editarUsuario(i);
-        acciones.appendChild(btnEdit);
-      }
-      
-      // Botón para activar/desactivar (solo superusuario)
-      if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
-        const btnEstado = document.createElement('button');
-        btnEstado.textContent = u.activo === false ? 'Activar' : 'Desactivar';
-        btnEstado.className = u.activo === false ? 'btn-edit' : 'btn-delete';
-        btnEstado.onclick = () => cambiarEstadoUsuario(i);
-        acciones.appendChild(btnEstado);
-      }
-      
-      // Verificar permisos para eliminar
-      let puedeEliminar = true;
-      
-      // No permitir eliminar al propio usuario
-      if (u.user === usuarioActivo.user) {
-        puedeEliminar = false;
-      }
-      
-      // Administradores no pueden eliminar superusuarios ni usuarios de otros grados
-      if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-        if (ROLE_ALIASES.SUPER.includes(u.rol) || u.grado !== usuarioActivo.grado) {
-          puedeEliminar = false;
-        }
-      }
-      
-      if (puedeEliminar) {
-        const btnDelete = document.createElement('button');
-        btnDelete.textContent = 'Eliminar';
-        btnDelete.className = 'btn-delete';
-        btnDelete.onclick = () => eliminarUsuario(i);
-        acciones.appendChild(btnDelete);
-      }
-      
-      div.appendChild(acciones);
+    if (pagosFiltrados.length === 0) {
+        cont.innerHTML = '<div class="item">No se encontraron pagos</div>';
+        return;
     }
     
-    cont.appendChild(div);
-  });
+    pagosFiltrados.forEach((p, i) => {
+        const padre = padres.find(pa => pa.id === p.padreId);
+        if (!padre) return;
+        
+        const div = document.createElement('div');
+        div.className = 'item';
+        
+        div.innerHTML = `
+            <b>${padre.nombre}</b><br>
+            💰 Monto: Bs ${p.monto}<br>
+            📅 Fecha: ${p.fecha}<br>
+            📝 Concepto: ${p.concepto}<br>
+            🎓 Grupo: ${p.grupo}
+        `;
+        
+        // Botones de acción (solo para usuarios con permisos)
+        if (usuarioActivo && !ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
+            const acciones = document.createElement('div');
+            acciones.className = 'item-actions';
+            
+            const btnEdit = document.createElement('button');
+            btnEdit.textContent = 'Editar';
+            btnEdit.className = 'btn-edit';
+            btnEdit.onclick = () => editarPago(i);
+            acciones.appendChild(btnEdit);
+            
+            const btnDelete = document.createElement('button');
+            btnDelete.textContent = 'Eliminar';
+            btnDelete.className = 'btn-delete';
+            btnDelete.onclick = () => eliminarPago(i);
+            acciones.appendChild(btnDelete);
+            
+            div.appendChild(acciones);
+        }
+        
+        cont.appendChild(div);
+    });
 }
 
-// ... (el resto de las funciones de usuarios.js se mantienen igual: editarUsuario, eliminarUsuario, cambiarEstadoUsuario, cancelarEdicionUsuario, cargarTodosLosGrados)
+function cargarPadresPagoSelect() {
+    const select = document.getElementById('padrePago');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Seleccionar padre</option>';
+    
+    // Filtrar padres según permisos del usuario
+    const padresFiltrados = padres.filter(p => perteneceAGrado(p.grupo));
+    
+    padresFiltrados.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.nombre} (${p.grupo})`;
+        select.appendChild(opt);
+    });
+}
+
+async function guardarPago() {
+    const padreId = document.getElementById('padrePago').value;
+    const monto = parseFloat(document.getElementById('montoPago').value);
+    const fecha = document.getElementById('fechaPago').value;
+    const concepto = document.getElementById('conceptoPago').value.trim();
+    
+    if (!padreId || !monto || !fecha || !concepto) {
+        return mostrarNotificacion('❌ Complete todos los campos obligatorios');
+    }
+    
+    if (monto <= 0) {
+        return mostrarNotificacion('❌ El monto debe ser mayor a 0');
+    }
+    
+    const padre = padres.find(p => p.id === padreId);
+    if (!padre) {
+        return mostrarNotificacion('❌ Padre no encontrado');
+    }
+    
+    if (editandoIndex !== -1 && moduloEditando === 'pagos') {
+        // Edición de pago existente
+        pagos[editandoIndex] = {
+            ...pagos[editandoIndex],
+            padreId,
+            monto,
+            fecha,
+            concepto,
+            grupo: padre.grupo
+        };
+        registrarAccion(`Editó pago: ${concepto} - Bs ${monto}`);
+        mostrarNotificacion('✅ Pago actualizado correctamente');
+    } else {
+        // Nuevo pago
+        const nuevoPago = {
+            id: Date.now().toString(),
+            padreId,
+            monto,
+            fecha,
+            concepto,
+            grupo: padre.grupo,
+            fechaCreacion: new Date().toLocaleString()
+        };
+        
+        pagos.push(nuevoPago);
+        registrarAccion(`Nuevo pago: ${concepto} - Bs ${monto}`);
+        mostrarNotificacion('✅ Pago registrado correctamente');
+    }
+    
+    // GUARDAR EN GITHUB
+    await guardarDatos();
+    
+    mostrarPagos();
+    cancelarEdicionPago();
+}
+
+function editarPago(index) {
+    const p = pagos[index];
+    const padre = padres.find(pa => pa.id === p.padreId);
+    
+    // Cargar padres en el select
+    cargarPadresPagoSelect();
+    
+    document.getElementById('padrePago').value = p.padreId;
+    document.getElementById('montoPago').value = p.monto;
+    document.getElementById('fechaPago').value = p.fecha;
+    document.getElementById('conceptoPago').value = p.concepto || '';
+    
+    editandoIndex = index;
+    moduloEditando = 'pagos';
+    document.getElementById('btnGuardarPago').textContent = 'Actualizar';
+}
+
+async function eliminarPago(index) {
+    const p = pagos[index];
+    const padre = padres.find(pa => pa.id === p.padreId);
+    
+    if (confirm(`¿Eliminar pago de ${padre?.nombre} por Bs ${p.monto}?`)) {
+        pagos.splice(index, 1);
+        registrarAccion(`Eliminó pago: ${p.concepto} - Bs ${p.monto}`);
+        
+        // GUARDAR EN GITHUB
+        await guardarDatos();
+        
+        mostrarPagos();
+        mostrarNotificacion('✅ Pago eliminado');
+    }
+}
+
+function cancelarEdicionPago() {
+    document.getElementById('padrePago').value = '';
+    document.getElementById('montoPago').value = '';
+    document.getElementById('fechaPago').value = '';
+    document.getElementById('conceptoPago').value = '';
+    
+    editandoIndex = -1;
+    moduloEditando = '';
+    document.getElementById('btnGuardarPago').textContent = 'Guardar';
+          }
