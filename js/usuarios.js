@@ -63,7 +63,7 @@ function nuevoUsuario() {
   document.getElementById('btnGuardarUsuario').textContent = 'Guardar';
 }
 
-function guardarUsuario() {
+async function guardarUsuario() {
   if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
     mostrarNotificacion('❌ No tienes permisos para gestionar usuarios');
     return;
@@ -132,7 +132,8 @@ function guardarUsuario() {
     mostrarNotificacion('✅ Usuario creado correctamente');
   }
   
-  guardarDatos();
+  // GUARDAR EN GITHUB
+  await guardarDatos();
   mostrarUsuarios();
   cancelarEdicionUsuario();
 }
@@ -313,7 +314,7 @@ function editarUsuario(index) {
   document.getElementById('btnGuardarUsuario').textContent = 'Actualizar';
 }
 
-function eliminarUsuario(index) {
+async function eliminarUsuario(index) {
   if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
     mostrarNotificacion('❌ No tienes permisos para eliminar usuarios');
     return;
@@ -342,14 +343,17 @@ function eliminarUsuario(index) {
   if (confirm(`¿Eliminar usuario ${u.user}?`)) {
     usuarios.splice(index, 1);
     registrarAccion(`Eliminó usuario: ${u.user}`);
-    guardarDatos();
+    
+    // GUARDAR EN GITHUB
+    await guardarDatos();
+    
     mostrarUsuarios();
     mostrarNotificacion('✅ Usuario eliminado');
   }
 }
 
 // 🔥 FUNCIÓN PARA CAMBIAR ESTADO DE USUARIO (ACTIVAR/DESACTIVAR)
-function cambiarEstadoUsuario(index) {
+async function cambiarEstadoUsuario(index) {
   if (!usuarioActivo || !ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
     mostrarNotificacion('❌ Solo el superusuario puede cambiar estados de usuario');
     return;
@@ -369,7 +373,10 @@ function cambiarEstadoUsuario(index) {
   if (confirm(`¿${accion.toUpperCase()} usuario ${u.user}?`)) {
     usuarios[index].activo = nuevoEstado;
     registrarAccion(`${nuevoEstado ? 'Activó' : 'Desactivó'} usuario: ${u.user}`);
-    guardarDatos();
+    
+    // GUARDAR EN GITHUB
+    await guardarDatos();
+    
     mostrarUsuarios();
     mostrarNotificacion(`✅ Usuario ${nuevoEstado ? 'activado' : 'desactivado'} correctamente`);
     
@@ -447,4 +454,4 @@ function cargarTodosLosGrados(selectElement, gradoSeleccionado = '') {
     opt.selected = grado === gradoSeleccionado;
     optGroupPromo.appendChild(opt);
   });
-}
+      }
