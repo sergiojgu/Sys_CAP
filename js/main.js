@@ -28,13 +28,13 @@ const GITHUB_CONFIG = {
   usuario: 'sergiojgu',
   repositorio: 'Sys_CAP',
   rama: 'main',
-  token: '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' // Reemplaza con tu token real
+  token: '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' // Reemplaza con tu token real de GitHub
 };
 
 // ========== CONFIGURACIÓN TELEGRAM ==========
 const TELEGRAM_CONFIG = {
-  botToken: '1234567890:ABCdefGHIjklMNOpqrsTUVwxyz',
-  chatId: '123456789'
+  botToken: '7679063114:AAFeT9ioL3uUd0s-h2Rr5SDXbFRwy4chD98', // Tu token real
+  chatId: '6964897255' // Tu Chat ID real
 };
 
 // ========== SISTEMA DE CARGA DE DATOS DESDE JSON ==========
@@ -389,11 +389,9 @@ async function enviarSolicitudRegistro() {
   `;
 }
 
-// ========== TELEGRAM ==========
+// ========== TELEGRAM - CONFIGURACIÓN CORRECTA ==========
 function enviarNotificacionTelegram(usuario, grado) {
-  if (!TELEGRAM_CONFIG.botToken || TELEGRAM_CONFIG.botToken.includes('1234567890')) {
-    return;
-  }
+  console.log("📱 Enviando notificación a Telegram...");
   
   const mensaje = `🚨 NUEVO REGISTRO PENDIENTE
 
@@ -405,16 +403,37 @@ function enviarNotificacionTelegram(usuario, grado) {
 
   const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
   
+  console.log("URL Telegram:", url);
+  
   fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json' 
+    },
     body: JSON.stringify({
       chat_id: TELEGRAM_CONFIG.chatId,
-      text: mensaje
+      text: mensaje,
+      parse_mode: 'HTML'
     })
-  }).catch(error => {
-    console.log('Error enviando notificación');
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.ok) {
+      console.log('✅ Notificación enviada a Telegram correctamente');
+    } else {
+      console.log('❌ Error Telegram:', data);
+    }
+  })
+  .catch(error => {
+    console.log('❌ Error enviando notificación:', error);
   });
+}
+
+// Función para probar Telegram
+function probarTelegram() {
+  console.log("🔔 Probando Telegram...");
+  enviarNotificacionTelegram('USUARIO_PRUEBA', '1° A');
+  mostrarNotificacion('🔔 Mensaje de prueba enviado a Telegram');
 }
 
 // ========== FUNCIONES PRINCIPALES ==========
@@ -431,6 +450,13 @@ function logoutAndShowBlank(){
       <h2>Sesión cerrada</h2>
       <p style="color:#666; margin-bottom:18px;">Pulsa para iniciar sesión</p>
       <button onclick="location.reload()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Iniciar sesión</button>
+      
+      <!-- Botón de prueba Telegram -->
+      <div style="margin-top: 15px;">
+        <button onclick="probarTelegram()" style="background: #9C27B0; color: white; border: none; border-radius: 5px; padding: 8px 15px; cursor: pointer; font-size: 12px;">
+          🔔 Probar Telegram
+        </button>
+      </div>
     </div>
   `;
 }
