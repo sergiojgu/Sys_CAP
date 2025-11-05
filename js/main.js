@@ -28,7 +28,7 @@ const GITHUB_CONFIG = {
   usuario: 'sergiojgu',
   repositorio: 'Sys_CAP',
   rama: 'main',
-  token: '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' // Reemplaza con tu token real de GitHub
+  token: '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' // Reemplaza con tu token real de GitHub
 };
 
 // ========== CONFIGURACIÓN TELEGRAM ==========
