@@ -1,246 +1,156 @@
 // ========== PADRES ==========
-function guardarPadre(){
-  console.log("🔧 guardarPadre() ejecutándose");
-  
-  if(usuarioActivo && ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
-    mostrarNotificacion('Sin permiso para guardar');
-    return;
-  }
-  
-  const nombre = document.getElementById('nombrePadre').value.trim();
-  const telefono = document.getElementById('telefonoPadre').value.trim();
-  const grupoSeleccionado = document.getElementById('grupoPadre').value;
-  
-  console.log("📝 Datos capturados:", { nombre, telefono, grupoSeleccionado });
-  
-  if(!nombre || !grupoSeleccionado) {
-    mostrarNotificacion('❌ Nombre y grupo son obligatorios');
-    return;
-  }
-  
-  // Obtener el grado del grupo seleccionado
-  const grupoObj = grupos.find(g => g.nombre === grupoSeleccionado);
-  const grado = grupoObj ? grupoObj.grado : usuarioActivo.grado;
-  
-  console.log("🎓 Grado asignado:", grado);
-  
-  if (editandoIndex !== -1 && moduloEditando === 'padres') {
-    console.log("✏️ Editando padre existente, índice:", editandoIndex);
-    // Editar padre existente
-    padres[editandoIndex] = { nombre, telefono, grupo: grupoSeleccionado, grado };
-    registrarAccion(`Editó padre: ${nombre} (${grupoSeleccionado})`);
-    mostrarNotificacion('✅ Padre actualizado correctamente');
-    editandoIndex = -1;
-    moduloEditando = '';
-  } else {
-    console.log("➕ Creando nuevo padre");
-    // Nuevo padre
-    padres.push({ nombre, telefono, grupo: grupoSeleccionado, grado });
-    registrarAccion(`Nuevo padre: ${nombre} (${grupoSeleccionado})`);
-    mostrarNotificacion('✅ Padre agregado correctamente');
-  }
-  
-  console.log("💾 Padres después de guardar:", padres);
-  
-  guardarDatos();
-  mostrarPadres();
-  limpiarFormularioPadre();
-}
-
-function limpiarFormularioPadre() {
-  document.getElementById('nombrePadre').value = '';
-  document.getElementById('telefonoPadre').value = '';
-  document.getElementById('grupoPadre').value = '';
-  editandoIndex = -1;
-  moduloEditando = '';
-  document.getElementById('btnGuardarPadre').textContent = 'Guardar';
-}
-
-function mostrarPadres(){
-  console.log("👀 mostrarPadres() ejecutándose");
-  const cont = document.getElementById('listaPadres');
-  if (!cont) {
-    console.log("❌ No se encontró listaPadres");
-    return;
-  }
-  
-  const q = document.getElementById('buscarPadre')?.value?.toLowerCase() || '';
-  console.log("🔍 Búsqueda:", q);
-  console.log("📋 Todos los padres:", padres);
-  console.log("👤 Usuario activo:", usuarioActivo);
-  
-  cont.innerHTML = '';
-  
-  // Debug detallado del filtrado
-  const padresFiltrados = padres.filter(p => {
-    console.log("🔎 Analizando padre:", p);
+function mostrarPadres() {
+    const cont = document.getElementById('listaPadres');
+    if (!cont) return;
     
-    if (!p || !p.nombre) {
-      console.log("❌ Padre inválido o sin nombre");
-      return false;
+    const q = document.getElementById('buscarPadre')?.value?.toLowerCase() || '';
+    cont.innerHTML = '';
+    
+    // Filtrar padres según permisos del usuario
+    let padresFiltrados = padres.filter(p => 
+        p.nombre.toLowerCase().includes(q) && perteneceAGrado(p.grupo)
+    );
+    
+    if (padresFiltrados.length === 0) {
+        cont.innerHTML = '<div class="item">No se encontraron padres/tutores</div>';
+        return;
     }
     
-    const tieneNombre = p.nombre.toLowerCase().includes(q);
-    const perteneceAlGrado = perteneceAGrado(p.grado); // ← CAMBIADO: usar p.grado en lugar de p.grupo
-    
-    console.log(`📊 Filtros - Nombre: ${tieneNombre}, Grado: ${perteneceAlGrado}, Grado del padre: "${p.grado}", Grado del usuario: "${usuarioActivo?.grado}"`);
-    
-    return tieneNombre && perteneceAlGrado;
-  });
-  
-  console.log("🎯 Padres filtrados:", padresFiltrados);
-  
-  if (padresFiltrados.length === 0) {
-    console.log("📭 No hay padres para mostrar después del filtrado");
-    cont.innerHTML = '<div class="item">No hay padres/tutores registrados.</div>';
-    return;
-  }
-  
-  padresFiltrados.forEach((p, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `<b>${p.nombre}</b> (${p.grupo}) - Grado: ${p.grado}<br>Teléfono: ${p.telefono || '—'}`;
-    
-    if (usuarioActivo && !ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
-      const acciones = document.createElement('div');
-      acciones.className = 'item-actions';
-      
-      const btnEdit = document.createElement('button');
-      btnEdit.textContent = 'Editar';
-      btnEdit.className = 'btn-edit';
-      btnEdit.onclick = () => editarPadre(padres.indexOf(p));
-      acciones.appendChild(btnEdit);
-      
-      const btnDelete = document.createElement('button');
-      btnDelete.textContent = 'Eliminar';
-      btnDelete.className = 'btn-delete';
-      btnDelete.onclick = () => eliminarPadre(padres.indexOf(p));
-      acciones.appendChild(btnDelete);
-      
-      div.appendChild(acciones);
-    }
-    
-    cont.appendChild(div);
-  });
-  
-  console.log("✅ Padres mostrados correctamente");
-}
-
-function editarPadre(index) {
-  console.log("✏️ Editando padre en índice:", index);
-  if(usuarioActivo && ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
-    mostrarNotificacion('Sin permiso para editar');
-    return;
-  }
-  
-  const p = padres[index];
-  console.log("📝 Datos del padre a editar:", p);
-  
-  document.getElementById('nombrePadre').value = p.nombre;
-  document.getElementById('telefonoPadre').value = p.telefono || '';
-  document.getElementById('grupoPadre').value = p.grupo || '';
-  
-  editandoIndex = index;
-  moduloEditando = 'padres';
-  document.getElementById('btnGuardarPadre').textContent = 'Actualizar';
-  document.getElementById('nombrePadre').focus();
-}
-
-function eliminarPadre(index) {
-  console.log("🗑️ Eliminando padre en índice:", index);
-  if(usuarioActivo && ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
-    mostrarNotificacion('Sin permiso para eliminar');
-    return;
-  }
-  
-  if (confirm(`¿Eliminar a ${padres[index].nombre}?`)) {
-    const nombre = padres[index].nombre;
-    padres.splice(index, 1);
-    registrarAccion(`Eliminó padre: ${nombre}`);
-    guardarDatos();
-    mostrarPadres();
-    mostrarNotificacion('✅ Padre eliminado');
-  }
+    padresFiltrados.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        
+        // Contar alumnos asociados
+        const alumnosAsociados = alumnos.filter(a => a.padreId === p.id);
+        
+        div.innerHTML = `
+            <b>${p.nombre}</b><br>
+            📞 Teléfono: ${p.telefono}<br>
+            🎓 Grupo: ${p.grupo}<br>
+            👨‍👦 Alumnos: ${alumnosAsociados.length}
+        `;
+        
+        // Botones de acción (solo para usuarios con permisos)
+        if (usuarioActivo && !ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
+            const acciones = document.createElement('div');
+            acciones.className = 'item-actions';
+            
+            const btnEdit = document.createElement('button');
+            btnEdit.textContent = 'Editar';
+            btnEdit.className = 'btn-edit';
+            btnEdit.onclick = () => editarPadre(i);
+            acciones.appendChild(btnEdit);
+            
+            const btnDelete = document.createElement('button');
+            btnDelete.textContent = 'Eliminar';
+            btnDelete.className = 'btn-delete';
+            btnDelete.onclick = () => eliminarPadre(i);
+            acciones.appendChild(btnDelete);
+            
+            div.appendChild(acciones);
+        }
+        
+        cont.appendChild(div);
+    });
 }
 
 function cargarGruposPadreSelect() {
-  console.log("📋 cargarGruposPadreSelect() ejecutándose");
-  const select = document.getElementById('grupoPadre');
-  if (!select) {
-    console.log("❌ No se encontró grupoPadre select");
-    return;
-  }
-  
-  select.innerHTML = '<option value="">Seleccionar grupo</option>';
-  
-  // Filtrar grupos por grado del usuario
-  const gruposFiltrados = grupos.filter(g => 
-    ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || 
-    usuarioActivo.grado === 'Todos' || 
-    g.grado === usuarioActivo.grado
-  );
-  
-  console.log("📊 Grupos disponibles:", gruposFiltrados);
-  
-  if (gruposFiltrados.length === 0) {
-    const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = 'No hay grupos disponibles';
-    opt.disabled = true;
-    select.appendChild(opt);
-    return;
-  }
-  
-  // Agrupar grupos por grado para mejor organización
-  const gruposPorGrado = {};
-  gruposFiltrados.forEach(grupo => {
-    if (!gruposPorGrado[grupo.grado]) {
-      gruposPorGrado[grupo.grado] = [];
-    }
-    gruposPorGrado[grupo.grado].push(grupo);
-  });
-  
-  // Crear optgroups por grado
-  Object.keys(gruposPorGrado).sort().forEach(grado => {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = `Grado ${grado}`;
+    const select = document.getElementById('grupoPadre');
+    if (!select) return;
     
-    gruposPorGrado[grado].forEach(grupo => {
-      const opt = document.createElement('option');
-      opt.value = grupo.nombre;
-      opt.textContent = `${grupo.nombre} - ${grupo.descripcion || 'Sin descripción'}`;
-      optgroup.appendChild(opt);
-    });
+    select.innerHTML = '<option value="">Seleccionar grupo</option>';
     
-    select.appendChild(optgroup);
-  });
-  
-  console.log("✅ Select de grupos cargado");
+    // Cargar grupos según permisos del usuario
+    cargarGradosGrupoSelect(select);
 }
 
-// Función para migrar padres existentes (solo una vez)
-function migrarPadresExistente() {
-  console.log("🔄 Migrando padres existentes...");
-  let migrados = 0;
-  
-  padres.forEach(p => {
-    if (p.grupo && !p.grado) {
-      // Buscar el grado del grupo
-      const grupoObj = grupos.find(g => g.nombre === p.grupo);
-      if (grupoObj) {
-        p.grado = grupoObj.grado;
-        migrados++;
-      }
+async function guardarPadre() {
+    const nombre = document.getElementById('nombrePadre').value.trim();
+    const telefono = document.getElementById('telefonoPadre').value.trim();
+    const grupo = document.getElementById('grupoPadre').value;
+    
+    if (!nombre || !telefono || !grupo) {
+        return mostrarNotificacion('❌ Complete todos los campos obligatorios');
     }
-  });
-  
-  if (migrados > 0) {
-    guardarDatos();
-    console.log(`✅ Migrados ${migrados} padres`);
-  } else {
-    console.log("✅ No hay padres que migrar");
-  }
+    
+    if (editandoIndex !== -1 && moduloEditando === 'padres') {
+        // Edición de padre existente
+        padres[editandoIndex] = {
+            ...padres[editandoIndex],
+            nombre,
+            telefono,
+            grupo
+        };
+        registrarAccion(`Editó padre/tutor: ${nombre}`);
+        mostrarNotificacion('✅ Padre/tutor actualizado correctamente');
+    } else {
+        // Nuevo padre
+        const nuevoPadre = {
+            id: Date.now().toString(),
+            nombre,
+            telefono,
+            grupo,
+            fechaCreacion: new Date().toLocaleString()
+        };
+        
+        padres.push(nuevoPadre);
+        registrarAccion(`Nuevo padre/tutor: ${nombre}`);
+        mostrarNotificacion('✅ Padre/tutor creado correctamente');
+    }
+    
+    // GUARDAR EN GITHUB
+    await guardarDatos();
+    
+    mostrarPadres();
+    cancelarEdicionPadre();
 }
 
-// Ejecutar migración al cargar el módulo
-migrarPadresExistente();
+function editarPadre(index) {
+    const p = padres[index];
+    
+    document.getElementById('nombrePadre').value = p.nombre || '';
+    document.getElementById('telefonoPadre').value = p.telefono || '';
+    
+    // Cargar grupos en el select
+    cargarGruposPadreSelect();
+    
+    // Seleccionar el grupo actual
+    document.getElementById('grupoPadre').value = p.grupo;
+    
+    editandoIndex = index;
+    moduloEditando = 'padres';
+    document.getElementById('btnGuardarPadre').textContent = 'Actualizar';
+}
+
+async function eliminarPadre(index) {
+    const p = padres[index];
+    
+    // Verificar si tiene alumnos asociados
+    const alumnosAsociados = alumnos.filter(a => a.padreId === p.id);
+    
+    if (alumnosAsociados.length > 0) {
+        mostrarNotificacion('❌ No se puede eliminar, tiene alumnos asociados');
+        return;
+    }
+    
+    if (confirm(`¿Eliminar padre/tutor ${p.nombre}?`)) {
+        padres.splice(index, 1);
+        registrarAccion(`Eliminó padre/tutor: ${p.nombre}`);
+        
+        // GUARDAR EN GITHUB
+        await guardarDatos();
+        
+        mostrarPadres();
+        mostrarNotificacion('✅ Padre/tutor eliminado');
+    }
+}
+
+function cancelarEdicionPadre() {
+    document.getElementById('nombrePadre').value = '';
+    document.getElementById('telefonoPadre').value = '';
+    document.getElementById('grupoPadre').value = '';
+    
+    editandoIndex = -1;
+    moduloEditando = '';
+    document.getElementById('btnGuardarPadre').textContent = 'Guardar';
+                       }
