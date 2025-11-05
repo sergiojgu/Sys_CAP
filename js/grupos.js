@@ -1,238 +1,232 @@
-// ========== USUARIOS ==========
-function nuevoUsuario() {
-  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
-    mostrarNotificacion('❌ No tienes permisos para crear usuarios');
-    return;
-  }
-  
-  document.getElementById('formularioUsuario').style.display = 'block';
-  document.getElementById('botonNuevoUsuarioContainer').style.display = 'none';
-  
-  // Limpiar formulario
-  document.getElementById('nombreUsuario').value = '';
-  document.getElementById('passUsuario').value = '';
-  document.getElementById('telefonoUsuario').value = '591';
-  document.getElementById('rolUsuario').innerHTML = '';
-  document.getElementById('gradoUsuario').innerHTML = '<option value="">Seleccionar grado</option>';
-  
-  // Cargar opciones de rol según el usuario actual
-  const rolSelect = document.getElementById('rolUsuario');
-  
-  if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
-    rolSelect.innerHTML = `
-      <option value="superusuario">Superusuario</option>
-      <option value="admin">Administrador</option>
-      <option value="operador">Operador</option>
-      <option value="visitante">Visitante</option>
-    `;
-  } else if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    rolSelect.innerHTML = `
-      <option value="admin">Administrador</option>
-      <option value="operador">Operador</option>
-      <option value="visitante">Visitante</option>
-    `;
-  }
-  
-  // Cargar opciones de grado
-  const gradoSelect = document.getElementById('gradoUsuario');
-  gradoSelect.innerHTML = '<option value="">Seleccionar grado</option>';
-  
-  // Si es superusuario, agregar opción "Todos" y todos los grados
-  if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
-    const optTodos = document.createElement('option');
-    optTodos.value = 'Todos';
-    optTodos.textContent = 'Todos';
-    gradoSelect.appendChild(optTodos);
+// ========== GRUPOS ==========
+function mostrarGrupos() {
+    const cont = document.getElementById('listaGrupos');
+    if (!cont) return;
     
-    // Agregar todos los grados disponibles
-    cargarTodosLosGrados(gradoSelect);
-  } else if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    // Para administradores, solo mostrar su propio grado
-    const opt = document.createElement('option');
-    opt.value = usuarioActivo.grado;
-    opt.textContent = usuarioActivo.grado;
-    opt.selected = true;
-    gradoSelect.appendChild(opt);
+    const q = document.getElementById('buscarGrupo')?.value?.toLowerCase() || '';
+    cont.innerHTML = '';
     
-    // Deshabilitar el select para administradores (solo pueden crear usuarios de su grado)
-    gradoSelect.disabled = true;
-  }
-  
-  editandoIndex = -1;
-  moduloEditando = 'usuarios';
-  document.getElementById('btnGuardarUsuario').textContent = 'Guardar';
-}
-
-function guardarUsuario() {
-  if (!usuarioActivo || (!ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) && !ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
-    mostrarNotificacion('❌ No tienes permisos para gestionar usuarios');
-    return;
-  }
-  
-  const nombre = document.getElementById('nombreUsuario').value.trim();
-  const pass = document.getElementById('passUsuario').value;
-  const telefono = document.getElementById('telefonoUsuario').value.trim();
-  const rol = document.getElementById('rolUsuario').value;
-  let grado = document.getElementById('gradoUsuario').value;
-  
-  // Para administradores, el grado siempre será el mismo que el del administrador
-  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    grado = usuarioActivo.grado;
-  }
-  
-  if (!nombre || !pass || !rol || !grado) {
-    return mostrarNotificacion('❌ Completar todos los campos obligatorios');
-  }
-  
-  // Validar que administradores no creen superusuarios
-  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && ROLE_ALIASES.SUPER.includes(rol)) {
-    return mostrarNotificacion('❌ No tienes permisos para crear superusuarios');
-  }
-  
-  if (editandoIndex !== -1 && moduloEditando === 'usuarios') {
-    // Validaciones para edición
-    const usuarioEditado = usuarios[editandoIndex];
-    
-    // Administradores no pueden editar superusuarios
-    if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && ROLE_ALIASES.SUPER.includes(usuarioEditado.rol)) {
-      return mostrarNotificacion('❌ No tienes permisos para editar superusuarios');
-    }
-    
-    // Administradores solo pueden editar usuarios de su mismo grado
-    if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol) && usuarioEditado.grado !== usuarioActivo.grado) {
-      return mostrarNotificacion('❌ Solo puedes editar usuarios de tu mismo grado');
-    }
-    
-    usuarios[editandoIndex] = { 
-      ...usuarios[editandoIndex],
-      user: nombre, 
-      pass, 
-      rol, 
-      grado, 
-      telefono 
-    };
-    registrarAccion(`Editó usuario: ${nombre} (${rol})`);
-    mostrarNotificacion('✅ Usuario actualizado correctamente');
-  } else {
-    // Nuevo usuario
-    if (usuarios.some(u => u.user === nombre)) {
-      return mostrarNotificacion('❌ Ya existe un usuario con ese nombre');
-    }
-    
-    usuarios.push({ 
-      user: nombre, 
-      pass, 
-      rol, 
-      grado, 
-      telefono,
-      activo: true, // Usuarios creados aquí por admin/super están ACTIVOS
-      fechaCreacion: new Date().toLocaleString()
-    });
-    registrarAccion(`Nuevo usuario: ${nombre} (${rol})`);
-    mostrarNotificacion('✅ Usuario creado correctamente');
-  }
-  
-  guardarDatos();
-  mostrarUsuarios();
-  cancelarEdicionUsuario();
-}
-
-function mostrarUsuarios() {
-  const cont = document.getElementById('listaUsuarios');
-  if (!cont) return;
-  
-  const q = document.getElementById('buscarUsuario')?.value?.toLowerCase() || '';
-  cont.innerHTML = '';
-  
-  // Filtrar usuarios según permisos
-  let usuariosFiltrados = usuarios.filter(u => u.user.toLowerCase().includes(q));
-  
-  // Si es administrador, solo mostrar usuarios de su mismo grado
-  if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-    usuariosFiltrados = usuariosFiltrados.filter(u => 
-      u.grado === usuarioActivo.grado && !ROLE_ALIASES.SUPER.includes(u.rol)
+    // Filtrar grupos según permisos del usuario
+    let gruposFiltrados = grupos.filter(g => 
+        g.nombre.toLowerCase().includes(q) && 
+        (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || 
+         usuarioActivo.grado === 'Todos' || 
+         g.grado === usuarioActivo.grado)
     );
-  }
-  
-  if (usuariosFiltrados.length === 0) {
-    cont.innerHTML = '<div class="item">No se encontraron usuarios</div>';
-    return;
-  }
-  
-  usuariosFiltrados.forEach((u, i) => {
-    const div = document.createElement('div');
-    div.className = 'item';
     
-    // Mostrar estado activo/inactivo y fecha de solicitud si existe
-    const estado = u.activo === false ? '❌ INACTIVO' : '✅ ACTIVO';
-    const fechaInfo = u.fechaSolicitud ? `<br>Solicitud: ${u.fechaSolicitud}` : '';
-    
-    div.innerHTML = `
-      <b>${u.user}</b> (${u.rol}) - ${estado}${fechaInfo}<br>
-      Grado: ${u.grado}<br>
-      Teléfono: ${u.telefono || '—'}
-    `;
-    
-    // Solo superusuario y admin pueden editar/eliminar usuarios (con restricciones)
-    if (usuarioActivo && (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol))) {
-      const acciones = document.createElement('div');
-      acciones.className = 'item-actions';
-      
-      // Verificar permisos para editar
-      let puedeEditar = true;
-      
-      // Administradores no pueden editar superusuarios ni usuarios de otros grados
-      if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-        if (ROLE_ALIASES.SUPER.includes(u.rol) || u.grado !== usuarioActivo.grado) {
-          puedeEditar = false;
-        }
-      }
-      
-      if (puedeEditar) {
-        const btnEdit = document.createElement('button');
-        btnEdit.textContent = 'Editar';
-        btnEdit.className = 'btn-edit';
-        btnEdit.onclick = () => editarUsuario(i);
-        acciones.appendChild(btnEdit);
-      }
-      
-      // Botón para activar/desactivar (solo superusuario)
-      if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
-        const btnEstado = document.createElement('button');
-        btnEstado.textContent = u.activo === false ? 'Activar' : 'Desactivar';
-        btnEstado.className = u.activo === false ? 'btn-edit' : 'btn-delete';
-        btnEstado.onclick = () => cambiarEstadoUsuario(i);
-        acciones.appendChild(btnEstado);
-      }
-      
-      // Verificar permisos para eliminar
-      let puedeEliminar = true;
-      
-      // No permitir eliminar al propio usuario
-      if (u.user === usuarioActivo.user) {
-        puedeEliminar = false;
-      }
-      
-      // Administradores no pueden eliminar superusuarios ni usuarios de otros grados
-      if (ROLE_ALIASES.ADMIN.includes(usuarioActivo.rol)) {
-        if (ROLE_ALIASES.SUPER.includes(u.rol) || u.grado !== usuarioActivo.grado) {
-          puedeEliminar = false;
-        }
-      }
-      
-      if (puedeEliminar) {
-        const btnDelete = document.createElement('button');
-        btnDelete.textContent = 'Eliminar';
-        btnDelete.className = 'btn-delete';
-        btnDelete.onclick = () => eliminarUsuario(i);
-        acciones.appendChild(btnDelete);
-      }
-      
-      div.appendChild(acciones);
+    if (gruposFiltrados.length === 0) {
+        cont.innerHTML = '<div class="item">No se encontraron grupos</div>';
+        return;
     }
     
-    cont.appendChild(div);
-  });
+    gruposFiltrados.forEach((g, i) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        
+        // Contar alumnos en este grupo
+        const alumnosEnGrupo = alumnos.filter(a => a.grado === g.grado);
+        // Contar padres en este grupo
+        const padresEnGrupo = padres.filter(p => p.grupo === g.grado);
+        
+        div.innerHTML = `
+            <b>${g.nombre}</b><br>
+            🎓 Grado: ${g.grado}<br>
+            📝 Descripción: ${g.descripcion || '—'}<br>
+            👥 Estadísticas: ${alumnosEnGrupo.length} alumnos, ${padresEnGrupo.length} padres
+        `;
+        
+        // Botones de acción (solo para usuarios con permisos)
+        if (usuarioActivo && !ROLE_ALIASES.VISIT.includes(usuarioActivo.rol)) {
+            const acciones = document.createElement('div');
+            acciones.className = 'item-actions';
+            
+            const btnEdit = document.createElement('button');
+            btnEdit.textContent = 'Editar';
+            btnEdit.className = 'btn-edit';
+            btnEdit.onclick = () => editarGrupo(i);
+            acciones.appendChild(btnEdit);
+            
+            // Solo permitir eliminar si no hay alumnos o padres asociados
+            if (alumnosEnGrupo.length === 0 && padresEnGrupo.length === 0) {
+                const btnDelete = document.createElement('button');
+                btnDelete.textContent = 'Eliminar';
+                btnDelete.className = 'btn-delete';
+                btnDelete.onclick = () => eliminarGrupo(i);
+                acciones.appendChild(btnDelete);
+            }
+            
+            div.appendChild(acciones);
+        }
+        
+        cont.appendChild(div);
+    });
 }
 
-// ... (el resto de las funciones de usuarios.js se mantienen igual: editarUsuario, eliminarUsuario, cambiarEstadoUsuario, cancelarEdicionUsuario, cargarTodosLosGrados)
+function cargarGradosGrupoSelect(selectElement = null) {
+    const select = selectElement || document.getElementById('gradoGrupo');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Seleccionar grado</option>';
+    
+    // Si es superusuario, mostrar todos los grados
+    if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol)) {
+        const optTodos = document.createElement('option');
+        optTodos.value = 'Todos';
+        optTodos.textContent = 'Todos';
+        select.appendChild(optTodos);
+    }
+    
+    // Agregar grados de PRIMARIA
+    const optGroupPrimaria = document.createElement('optgroup');
+    optGroupPrimaria.label = 'PRIMARIA';
+    select.appendChild(optGroupPrimaria);
+    
+    const gradosPrimaria = [
+        '1° A', '1° B', '2° A', '2° B', '3° A', '3° B', 
+        '4° A', '4° B', '5° A', '5° B', '6° A', '6° B'
+    ];
+    
+    gradosPrimaria.forEach(grado => {
+        if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || 
+            usuarioActivo.grado === 'Todos' || 
+            usuarioActivo.grado === grado) {
+            const opt = document.createElement('option');
+            opt.value = grado;
+            opt.textContent = grado;
+            optGroupPrimaria.appendChild(opt);
+        }
+    });
+    
+    // Agregar grados de SECUNDARIA
+    const optGroupSecundaria = document.createElement('optgroup');
+    optGroupSecundaria.label = 'SECUNDARIA';
+    select.appendChild(optGroupSecundaria);
+    
+    const gradosSecundaria = [
+        '1° A Sec.', '1° B Sec.', '2° A Sec.', '2° B Sec.', 
+        '3° A Sec.', '3° B Sec.', '4° A Sec.', '4° B Sec.'
+    ];
+    
+    gradosSecundaria.forEach(grado => {
+        if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || 
+            usuarioActivo.grado === 'Todos' || 
+            usuarioActivo.grado === grado) {
+            const opt = document.createElement('option');
+            opt.value = grado;
+            opt.textContent = grado;
+            optGroupSecundaria.appendChild(opt);
+        }
+    });
+    
+    // Agregar grados de PROMOCIONES
+    const optGroupPromo = document.createElement('optgroup');
+    optGroupPromo.label = 'PROMOCIONES';
+    select.appendChild(optGroupPromo);
+    
+    const gradosPromo = [
+        'Pre Promo A', 'Pre Promo B', 'Promo A', 'Promo B'
+    ];
+    
+    gradosPromo.forEach(grado => {
+        if (ROLE_ALIASES.SUPER.includes(usuarioActivo.rol) || 
+            usuarioActivo.grado === 'Todos' || 
+            usuarioActivo.grado === grado) {
+            const opt = document.createElement('option');
+            opt.value = grado;
+            opt.textContent = grado;
+            optGroupPromo.appendChild(opt);
+        }
+    });
+}
+
+async function guardarGrupo() {
+    const nombre = document.getElementById('nombreGrupo').value.trim();
+    const descripcion = document.getElementById('descripcionGrupo').value.trim();
+    const grado = document.getElementById('gradoGrupo').value;
+    
+    if (!nombre || !grado) {
+        return mostrarNotificacion('❌ Complete todos los campos obligatorios');
+    }
+    
+    if (editandoIndex !== -1 && moduloEditando === 'grupos') {
+        // Edición de grupo existente
+        grupos[editandoIndex] = {
+            ...grupos[editandoIndex],
+            nombre,
+            descripcion,
+            grado
+        };
+        registrarAccion(`Editó grupo: ${nombre}`);
+        mostrarNotificacion('✅ Grupo actualizado correctamente');
+    } else {
+        // Nuevo grupo
+        const nuevoGrupo = {
+            id: Date.now().toString(),
+            nombre,
+            descripcion,
+            grado,
+            fechaCreacion: new Date().toLocaleString()
+        };
+        
+        grupos.push(nuevoGrupo);
+        registrarAccion(`Nuevo grupo: ${nombre}`);
+        mostrarNotificacion('✅ Grupo creado correctamente');
+    }
+    
+    // GUARDAR EN GITHUB
+    await guardarDatos();
+    
+    mostrarGrupos();
+    cancelarEdicionGrupo();
+}
+
+function editarGrupo(index) {
+    const g = grupos[index];
+    
+    document.getElementById('nombreGrupo').value = g.nombre || '';
+    document.getElementById('descripcionGrupo').value = g.descripcion || '';
+    
+    // Cargar grados en el select
+    cargarGradosGrupoSelect();
+    
+    // Seleccionar el grado actual
+    document.getElementById('gradoGrupo').value = g.grado;
+    
+    editandoIndex = index;
+    moduloEditando = 'grupos';
+    document.getElementById('btnGuardarGrupo').textContent = 'Actualizar';
+}
+
+async function eliminarGrupo(index) {
+    const g = grupos[index];
+    
+    // Verificar si hay alumnos o padres asociados
+    const alumnosEnGrupo = alumnos.filter(a => a.grado === g.grado);
+    const padresEnGrupo = padres.filter(p => p.grupo === g.grado);
+    
+    if (alumnosEnGrupo.length > 0 || padresEnGrupo.length > 0) {
+        mostrarNotificacion('❌ No se puede eliminar, hay alumnos o padres asociados');
+        return;
+    }
+    
+    if (confirm(`¿Eliminar grupo ${g.nombre}?`)) {
+        grupos.splice(index, 1);
+        registrarAccion(`Eliminó grupo: ${g.nombre}`);
+        
+        // GUARDAR EN GITHUB
+        await guardarDatos();
+        
+        mostrarGrupos();
+        mostrarNotificacion('✅ Grupo eliminado');
+    }
+}
+
+function cancelarEdicionGrupo() {
+    document.getElementById('nombreGrupo').value = '';
+    document.getElementById('descripcionGrupo').value = '';
+    document.getElementById('gradoGrupo').value = '';
+    
+    editandoIndex = -1;
+    moduloEditando = '';
+    document.getElementById('btnGuardarGrupo').textContent = 'Guardar';
+                             }
