@@ -23,6 +23,14 @@ var ROLE_ALIASES = {
 var editandoIndex = -1;
 var moduloEditando = '';
 
+// ========== CONFIGURACIÓN GITHUB API ==========
+const GITHUB_CONFIG = {
+  usuario: 'sergiojgu',
+  repositorio: 'Sys_CAP',
+  rama: 'main',
+  token: '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' // Reemplaza con tu token real
+};
+
 // ========== CONFIGURACIÓN TELEGRAM ==========
 const TELEGRAM_CONFIG = {
   botToken: '1234567890:ABCdefGHIjklMNOpqrsTUVwxyz',
@@ -35,42 +43,59 @@ async function cargarDatosIniciales() {
   
   try {
     // Intentar cargar desde el archivo JSON estático
-    const response = await fetch('datos_sistema.json');
+    const response = await fetch('https://raw.githubusercontent.com/sergiojgu/Sys_CAP/main/datos_sistema.json');
     
     if (response.ok) {
-      const datos = await response.json();
+      const datosTexto = await response.text();
+      console.log("📄 Contenido del JSON cargado");
       
-      // Cargar datos desde el JSON
-      alumnos = datos.alumnos || [];
-      padres = datos.padres || [];
-      grupos = datos.grupos || [];
-      reuniones = datos.reuniones || [];
-      pagos = datos.pagos || [];
-      bitacora = datos.bitacora || [];
-      usuarios = datos.usuarios || [];
+      const datos = JSON.parse(datosTexto);
       
-      console.log("✅ Datos cargados desde JSON:", {
+      // Validar y cargar datos con valores por defecto
+      alumnos = Array.isArray(datos.alumnos) ? datos.alumnos : [];
+      padres = Array.isArray(datos.padres) ? datos.padres : [];
+      grupos = Array.isArray(datos.grupos) ? datos.grupos : [];
+      reuniones = Array.isArray(datos.reuniones) ? datos.reuniones : [];
+      pagos = Array.isArray(datos.pagos) ? datos.pagos : [];
+      bitacora = Array.isArray(datos.bitacora) ? datos.bitacora : [];
+      usuarios = Array.isArray(datos.usuarios) ? datos.usuarios : [];
+      
+      // Asegurar que siempre haya al menos el usuario root
+      if (!usuarios.some(u => u.user === 'root')) {
+        usuarios.push({
+          user: 'root',
+          pass: 'toor',
+          rol: 'superusuario',
+          grado: 'Todos',
+          telefono: '591',
+          activo: true
+        });
+        await guardarDatosEnGitHub(); // Guardar si se agregó root
+      }
+      
+      console.log("✅ Datos cargados desde GitHub:", {
         usuarios: usuarios.length,
         alumnos: alumnos.length,
         padres: padres.length
       });
       
     } else {
-      console.log("⚠️ No se encontró datos_sistema.json - usando datos por defecto");
-      cargarDatosPorDefecto();
+      console.log("⚠️ No se pudo cargar datos_sistema.json - creando datos iniciales");
+      await crearDatosIniciales();
     }
     
   } catch (error) {
     console.log("❌ Error cargando datos JSON:", error);
-    cargarDatosPorDefecto();
+    console.log("📝 Creando datos iniciales debido al error");
+    await crearDatosIniciales();
   }
   
-  // También intentar cargar datos de sesión desde localStorage
+  // Cargar sesión de usuario
   cargarSesionUsuario();
 }
 
-function cargarDatosPorDefecto() {
-  // Datos por defecto para cuando no hay JSON
+async function crearDatosIniciales() {
+  // Datos iniciales
   usuarios = [
     {
       user: 'root',
@@ -81,7 +106,15 @@ function cargarDatosPorDefecto() {
       activo: true
     }
   ];
-  console.log("📝 Usando datos por defecto");
+  alumnos = [];
+  padres = [];
+  grupos = [];
+  reuniones = [];
+  pagos = [];
+  bitacora = [];
+  
+  // Guardar datos iniciales en GitHub
+  await guardarDatosEnGitHub();
 }
 
 function cargarSesionUsuario() {
@@ -98,20 +131,86 @@ function cargarSesionUsuario() {
   }
 }
 
-function guardarDatos() {
-  try {
-    if (typeof Storage !== 'undefined') {
-      // Guardar solo la sesión del usuario en localStorage
-      if (usuarioActivo) {
-        localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
-      }
-      
-      // Los demás datos se mantienen en memoria durante la sesión
-      // Para persistencia completa, necesitarías un backend
-    }
-  } catch (error) {
-    console.log("⚠️ Error guardando datos:", error);
+// ========== GITHUB API - GUARDAR DATOS ==========
+async function guardarDatosEnGitHub() {
+  console.log("💾 Guardando datos en GitHub...");
+  
+  // Validar configuración
+  if (!GITHUB_CONFIG.token || GITHUB_CONFIG.token === 'TU_TOKEN_GITHUB') {
+    console.log("❌ Token de GitHub no configurado");
+    mostrarNotificacion('❌ Error: Token GitHub no configurado');
+    return false;
   }
+  
+  const datosActualizados = {
+    usuarios: usuarios,
+    alumnos: alumnos,
+    padres: padres,
+    grupos: grupos,
+    reuniones: reuniones,
+    pagos: pagos,
+    bitacora: bitacora,
+    ultimaActualizacion: new Date().toISOString()
+  };
+  
+  const contenido = JSON.stringify(datosActualizados, null, 2);
+  const contenidoBase64 = btoa(unescape(encodeURIComponent(contenido)));
+  
+  try {
+    // Primero obtener el SHA del archivo actual para actualizarlo
+    const url = `https://api.github.com/repos/${GITHUB_CONFIG.usuario}/${GITHUB_CONFIG.repositorio}/contents/datos_sistema.json`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `token ${GITHUB_CONFIG.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    
+    let sha = '';
+    if (response.ok) {
+      const fileInfo = await response.json();
+      sha = fileInfo.sha;
+    }
+    
+    // Crear o actualizar el archivo
+    const updateResponse = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_CONFIG.token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Actualización automática del sistema - ${new Date().toLocaleString()}`,
+        content: contenidoBase64,
+        sha: sha,
+        branch: GITHUB_CONFIG.rama
+      })
+    });
+    
+    if (updateResponse.ok) {
+      console.log("✅ Datos guardados en GitHub correctamente");
+      mostrarNotificacion('✅ Datos guardados en el repositorio');
+      return true;
+    } else {
+      const error = await updateResponse.json();
+      console.log("❌ Error guardando en GitHub:", error);
+      mostrarNotificacion('❌ Error guardando datos');
+      return false;
+    }
+    
+  } catch (error) {
+    console.log("❌ Error en GitHub API:", error);
+    mostrarNotificacion('❌ Error de conexión con GitHub');
+    return false;
+  }
+}
+
+// Función para guardar datos (usada por otros módulos)
+async function guardarDatos() {
+  return await guardarDatosEnGitHub();
 }
 
 // ========== SISTEMA DE LOGIN ==========
@@ -124,7 +223,6 @@ function login() {
     return;
   }
   
-  // Buscar usuario
   const u = usuarios.find(x => x.user === user && x.pass === pass);
   
   if (u) {
@@ -134,7 +232,7 @@ function login() {
     }
     
     usuarioActivo = u;
-    guardarDatos();
+    guardarSesion();
     
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('mainHeader').style.display = 'block';
@@ -146,6 +244,16 @@ function login() {
     
   } else {
     mostrarNotificacion('❌ Usuario o contraseña incorrecta');
+  }
+}
+
+function guardarSesion() {
+  try {
+    if (typeof Storage !== 'undefined' && usuarioActivo) {
+      localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
+    }
+  } catch (error) {
+    console.log("⚠️ Error guardando sesión:", error);
   }
 }
 
@@ -213,7 +321,7 @@ function cargarGradosRegistro() {
     });
 }
 
-function enviarSolicitudRegistro() {
+async function enviarSolicitudRegistro() {
   const nombre = document.getElementById('nombreRegistro').value.trim();
   const pass = document.getElementById('passRegistro').value;
   const telefono = document.getElementById('telefonoRegistro').value.trim();
@@ -229,7 +337,7 @@ function enviarSolicitudRegistro() {
     return;
   }
   
-  // Agregar nuevo usuario al array en memoria
+  // Agregar nuevo usuario
   usuarios.push({ 
     user: nombre, 
     pass, 
@@ -240,13 +348,13 @@ function enviarSolicitudRegistro() {
     fechaSolicitud: new Date().toLocaleString()
   });
   
-  // En GitHub, los datos solo persisten durante la sesión actual
-  // Para persistencia, necesitarías actualizar el archivo JSON via GitHub API
-  mostrarNotificacion('✅ Usuario registrado (sesión actual)');
+  // Guardar datos en GitHub
+  const guardadoExitoso = await guardarDatosEnGitHub();
   
   // Enviar notificación a Telegram
   enviarNotificacionTelegram(nombre, grado);
   
+  // Mostrar mensaje de confirmación
   document.getElementById('loginScreen').innerHTML = `
     <div style="text-align:center; padding:40px;">
       <h2 style="color: green;">✅ Solicitud Enviada</h2>
@@ -254,6 +362,7 @@ function enviarSolicitudRegistro() {
         La solicitud de creación de usuario ha sido enviada.<br>
         En las próximas 48 horas, obtendrá respuesta.
       </p>
+      
       <div style="background: #e3f2fd; border: 2px solid #2196F3; border-radius: 10px; padding: 15px; margin: 20px 0;">
         <p style="color: #1976D2; margin: 0; font-weight: bold;">
           📱 Notificación enviada al administrador
@@ -262,6 +371,17 @@ function enviarSolicitudRegistro() {
           El superusuario ha sido notificado vía Telegram
         </p>
       </div>
+      
+      ${guardadoExitoso ? 
+        '<div style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 15px; margin: 20px 0;">' +
+          '<p style="color: #155724; margin: 0; font-weight: bold;">💾 Datos Guardados en el Repositorio</p>' +
+        '</div>' :
+        '<div style="background: #f8d7da; border: 2px solid #dc3545; border-radius: 10px; padding: 15px; margin: 20px 0;">' +
+          '<p style="color: #721c24; margin: 0; font-weight: bold;">⚠️ Error Guardando Datos</p>' +
+          '<p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Los datos se guardaron localmente pero no en el repositorio</p>' +
+        '</div>'
+      }
+      
       <button onclick="volverLogin()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px;">
         Volver al Inicio
       </button>
@@ -348,6 +468,33 @@ function mostrarNotificacion(msg){
   setTimeout(() => n.style.display = 'none', 3000);
 }
 
+function registrarAccion(texto){
+  const fecha = new Date().toLocaleString();
+  const usuario = usuarioActivo ? usuarioActivo.user : 'sistema';
+  bitacora.unshift({ fecha, usuario, texto });
+  if(bitacora.length > 300) bitacora.pop();
+  // Los datos se guardarán cuando se llame a guardarDatos()
+}
+
+function mostrarBitacora(){
+  const cont = document.getElementById('bitacoraLista');
+  if (!cont) return;
+  
+  cont.innerHTML = '';
+  
+  if (bitacora.length === 0) {
+    cont.innerHTML = '<div class="item">No hay registros en la bitácora.</div>';
+    return;
+  }
+  
+  bitacora.forEach((b, index) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<b>${b.fecha}</b> - ${b.usuario}: ${b.texto}`;
+    cont.appendChild(div);
+  });
+}
+
 function abrirModulo(id){
   document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -379,7 +526,7 @@ function volverMenu(){
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async function() {
-  // Cargar datos desde el JSON estático
+  // Cargar datos desde GitHub
   await cargarDatosIniciales();
   
   // Configurar eventos
