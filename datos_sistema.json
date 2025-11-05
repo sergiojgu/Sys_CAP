@@ -1,1 +1,18 @@
-
+{
+  "usuarios": [
+    {
+      "user": "root",
+      "pass": "toor",
+      "rol": "superusuario",
+      "grado": "Todos",
+      "telefono": "591",
+      "activo": true
+    }
+  ],
+  "alumnos": [],
+  "padres": [],
+  "grupos": [],
+  "reuniones": [],
+  "pagos": [],
+  "bitacora": []
+}
